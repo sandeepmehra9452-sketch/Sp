@@ -1,0 +1,2113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SignageStore — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --side:#0d1b2a; --side2:#122639; --side-line:rgba(255,255,255,.07);
+  --bg:#f3f6fb; --card:#ffffff; --ink:#0f1c2e; --muted:#6b7a90; --line:#e6ecf4;
+  --blue:#2563eb; --blue-d:#1d4ed8; --blue-bg:#eaf1fe;
+  --green:#16a34a; --green-bg:#e8f7ee; --red:#dc2626; --red-bg:#fdecec;
+  --amber:#d97706; --amber-bg:#fdf3e3; --purple:#7c3aed; --purple-bg:#f1eafe;
+  --teal:#0d9488; --teal-bg:#e6f6f4; --cyan:#0891b2; --cyan-bg:#e5f6fb;
+  --radius:14px; --shadow:0 1px 3px rgba(15,28,46,.06),0 8px 24px rgba(15,28,46,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--blue)}
+h1,h2,h3{margin:0}
+
+/* ---------- Login ---------- */
+.login{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(900px 500px at 20% -10%,#1e3a5f,#0d1b2a 60%)}
+.lbox{width:min(400px,100%);background:#fff;border-radius:18px;padding:34px 30px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.lmark{width:78px;height:78px;display:grid;place-items:center;margin-bottom:18px}
+.lmark img{width:100%;height:100%;object-fit:contain}
+.lbox h1{font-size:22px;margin-bottom:2px}
+.muted{color:var(--muted)}
+label{display:block;margin:15px 0 6px;font-weight:600;font-size:12.5px;color:#33415c}
+input,select,textarea{width:100%;padding:10px 13px;border:1px solid #d7e0ec;border-radius:10px;background:#fff;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+textarea{min-height:90px;resize:vertical}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:var(--blue-d)}
+.btn-p:disabled{opacity:.55;cursor:default}
+.btn-o{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn-o:hover{border-color:#c6d4e6}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #f3c8c8}
+.btn-block{width:100%;justify-content:center;margin-top:20px}
+.err{color:var(--red);margin-top:12px;font-size:13px;min-height:1em}
+
+/* ---------- Shell ---------- */
+.app{display:none;min-height:100vh;min-height:100dvh}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:250px;max-width:82vw;background:linear-gradient(180deg,var(--side),var(--side2));z-index:100;display:flex;flex-direction:column;transition:transform .25s}
+.brand{display:flex;align-items:center;gap:11px;padding:18px 18px 16px;border-bottom:1px solid var(--side-line)}
+.bmark{width:42px;height:42px;display:grid;place-items:center;flex:none}
+.bmark img{width:100%;height:100%;object-fit:contain}
+.bname{color:#fff;font-weight:700;font-size:15.5px;line-height:1.2}
+.bsub{color:#8fa3bd;font-size:11px}
+.snav{flex:1;overflow-y:auto;padding:12px 12px 8px}
+.nitem{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;color:#b8c6da;padding:10px 12px;border-radius:10px;margin:2px 0;font-weight:500;font-size:13.5px}
+.nitem svg{width:18px;height:18px;flex:none}
+.nitem:hover{background:rgba(255,255,255,.06);color:#fff}
+.nitem.active{background:var(--blue);color:#fff;font-weight:600}
+.nitem .nbadge{margin-left:auto;background:var(--red);color:#fff;font-size:10.5px;font-weight:700;border-radius:9px;padding:1px 7px}
+.nitem .caret{margin-left:auto;transition:transform .2s}
+.nitem.open .caret{transform:rotate(180deg)}
+.nsub{display:none;margin:2px 0 4px 0}
+.nsub.open{display:block}
+.nsub .nitem{padding-left:41px;font-size:13px}
+.sidebar-close{
+  display:none;background:rgba(255,255,255,.08);border:0;color:#fff;
+  width:34px;height:34px;border-radius:9px;font-size:20px;line-height:1;
+  align-items:center;justify-content:center;padding:0;flex:none;cursor:pointer;
+}
+.sidebar-close:hover{background:rgba(255,255,255,.15)}
+.sidebar-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(13,27,42,.55);
+  z-index:99;opacity:0;transition:opacity .25s;
+}
+.sidebar-backdrop.show{display:block;opacity:1}
+.sfoot{padding:14px;border-top:1px solid var(--side-line)}
+.online{background:rgba(255,255,255,.05);border:1px solid var(--side-line);border-radius:12px;padding:12px 14px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.online small{display:block;color:#8fa3bd;font-weight:400;font-size:11px;margin-top:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18);flex:none}
+
+.main{margin-left:250px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.topbar{height:62px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 22px;position:sticky;top:0;z-index:30}
+.hamb{width:38px;height:38px;border:0;background:none;border-radius:9px;display:grid;place-items:center;color:#41506b}
+.hamb:hover{background:#f1f5fb}
+.gsearch{flex:1;max-width:520px;position:relative}
+.gsearch input{background:#f3f6fb;border:1px solid transparent;border-radius:10px;padding:9px 14px 9px 38px;font-size:13.5px}
+.gsearch input:focus{background:#fff;border-color:var(--blue)}
+.gsearch svg{position:absolute;left:12px;top:50%;margin-top:-8px;width:16px;height:16px;color:#8aa0bd}
+.tbtn{position:relative;width:38px;height:38px;border:0;background:none;border-radius:9px;display:grid;place-items:center;color:#41506b}
+.tbtn:hover{background:#f1f5fb}
+.tbtn svg{width:19px;height:19px}
+.tbadge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.prow{display:flex;align-items:center;gap:10px;cursor:pointer;padding:5px 8px;border-radius:10px}
+.prow:hover{background:#f1f5fb}
+.pav{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.pname{font-weight:600;font-size:13px;line-height:1.2}
+.prole{font-size:11px;color:var(--muted)}
+
+.content{padding:24px 26px 40px;flex:1;min-width:0}
+.phead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.phead h1{font-size:24px;font-weight:800;letter-spacing:-.3px}
+.phead .psub{color:var(--muted);margin-top:3px;font-size:13.5px}
+
+/* dropdowns */
+.dd{position:relative}
+.ddmenu{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 40px rgba(15,28,46,.16);min-width:230px;max-width:calc(100vw - 24px);z-index:60;overflow:hidden}
+@media(max-width:420px){.ddmenu{position:fixed;left:12px;right:12px;top:60px;width:auto;min-width:0}}
+.ddmenu.on{display:block}
+.dditem{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;padding:11px 14px;border-bottom:1px solid #f0f4fa;font-size:13px}
+.dditem:hover{background:#f6f9fd}
+.dditem:last-child{border-bottom:0}
+.ddhead{padding:10px 14px;font-weight:700;font-size:12.5px;border-bottom:1px solid #f0f4fa;display:flex;justify-content:space-between;align-items:center}
+.ddhead button{border:0;background:none;color:var(--blue);font-size:12px;font-weight:600}
+.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex:none;margin-top:5px}
+.ntitle{font-weight:600;font-size:12.5px;line-height:1.35}
+.ntime{color:var(--muted);font-size:11px;margin-top:2px}
+.nic{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none}
+.nic svg{width:17px;height:17px}
+.nic.order{background:var(--blue-bg);color:var(--blue)}
+.nic.quote{background:var(--cyan-bg);color:var(--cyan)}
+.nic.review{background:var(--amber-bg);color:var(--amber)}
+.nic.comment{background:var(--purple-bg);color:var(--purple)}
+.nic.default{background:#eef2f8;color:#5b6b84}
+.dditem.unread{background:#f5f9ff}
+.dditem .unread-dot{margin-top:14px}
+.pmenu-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;padding:11px 14px;font-size:13px;font-weight:500}
+.pmenu-item:hover{background:#f6f9fd}
+.pmenu-item.red{color:var(--red)}
+
+/* ---------- Cards / stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.sic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none}
+.sic svg{width:21px;height:21px}
+.sic.b{background:var(--blue-bg);color:var(--blue)}
+.sic.g{background:var(--green-bg);color:var(--green)}
+.sic.a{background:var(--amber-bg);color:var(--amber)}
+.sic.p{background:var(--purple-bg);color:var(--purple)}
+.sic.t{background:var(--teal-bg);color:var(--teal)}
+.sic.c{background:var(--cyan-bg);color:var(--cyan)}
+.sic.r{background:var(--red-bg);color:var(--red)}
+.slabel{color:var(--muted);font-size:12.5px;font-weight:500}
+.snum{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-top:1px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.cardpad{padding:18px 20px}
+.ctitle{font-weight:700;font-size:15px;margin-bottom:12px}
+
+/* ---------- Toolbar / filters ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar input,.toolbar select{width:auto;max-width:260px}
+.tsearch{position:relative}
+.tsearch input{padding-left:34px;min-width:240px}
+.tsearch svg{position:absolute;left:11px;top:50%;margin-top:-7px;width:14px;height:14px;color:#8aa0bd}
+
+/* ---------- Table ---------- */
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:12px 14px;border-bottom:1px solid #eef2f8;text-align:left;vertical-align:middle;font-size:13.5px}
+th{background:#f8fafd;color:#7185a1;font-weight:600;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#f8fbff}
+.tthumb{width:46px;height:46px;border-radius:9px;object-fit:cover;background:#e8eef6;display:block}
+.ttitle{font-weight:600;font-size:13.5px}
+.tsub{color:var(--muted);font-size:12px;margin-top:1px}
+.pill{display:inline-block;padding:4px 11px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--green-bg);color:var(--green)}
+.pill.off{background:#eef2f7;color:#7d8ea6}
+.pill.warn{background:var(--amber-bg);color:var(--amber)}
+.pill.bad{background:var(--red-bg);color:var(--red)}
+.pill.info{background:var(--blue-bg);color:var(--blue)}
+.pill.pu{background:var(--purple-bg);color:var(--purple)}
+.pill.te{background:var(--teal-bg);color:var(--teal)}
+.pill.cy{background:var(--cyan-bg);color:var(--cyan)}
+.act{display:inline-flex;gap:7px}
+.ibtn{width:32px;height:32px;border:0;border-radius:9px;display:grid;place-items:center}
+.ibtn svg{width:15px;height:15px}
+.ibtn.v{background:var(--blue);color:#fff}
+.ibtn.e{background:var(--blue-bg);color:var(--blue)}
+.ibtn.d{background:var(--red);color:#fff}
+.ibtn:hover{filter:brightness(.94)}
+.chk{width:16px;height:16px;accent-color:var(--blue)}
+.tfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;flex-wrap:wrap}
+.tfoot .muted{font-size:12.5px}
+.pager{display:flex;gap:5px}
+.pager button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:#41506b}
+.pager button.cur{background:var(--blue);border-color:var(--blue);color:#fff}
+.pager button:disabled{opacity:.4;cursor:default}
+.empty{padding:44px 20px;text-align:center;color:var(--muted)}
+.empty svg{width:38px;height:38px;color:#c4d2e4;margin-bottom:8px}
+
+/* ---------- Split layout (table + preview) ---------- */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media(max-width:1100px){.split{grid-template-columns:minmax(0,1fr)}.preview{display:none}}
+.preview{position:sticky;top:78px}
+.pv-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#e8eef6;display:block}
+.pv-title{font-weight:700;font-size:16px;margin:12px 0 8px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.pv-meta{display:flex;flex-direction:column;gap:9px;margin:12px 0}
+.pv-row{display:flex;align-items:center;gap:10px;font-size:13px}
+.pv-row svg{width:15px;height:15px;color:#8aa0bd;flex:none}
+.pv-row .k{color:var(--muted);width:92px;flex:none}
+.pv-row .v{font-weight:600}
+.qa{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.qa .btn{justify-content:center;width:100%}
+.tips{margin-top:14px;background:#f6f9ff;border:1px solid #dfe9fb;border-radius:12px;padding:13px 15px}
+.tips b{font-size:13px;display:flex;gap:7px;align-items:center}
+.tips p{margin:6px 0 0;color:var(--muted);font-size:12.5px}
+.hr{border:0;border-top:1px solid #eef2f8;margin:14px 0}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tab{border:0;background:none;padding:9px 15px;font-weight:600;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* ---------- Modal ---------- */
+.modal{display:none;position:fixed;inset:0;background:rgba(13,27,42,.5);place-items:center;padding:18px;z-index:80;overflow:auto}
+.modal.on{display:grid}
+.mbox{background:#fff;width:min(680px,100%);max-height:88vh;overflow:auto;border-radius:16px;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.mbox h2{font-size:19px;margin-bottom:4px}
+.mactions{display:flex;gap:9px;justify-content:flex-end;margin-top:20px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.msec{grid-column:1/-1;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7185a1;margin:8px 0 0;padding-top:10px;border-top:1px solid #eef2f8}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:210px;overflow:auto;padding:2px}
+.check{border:1px solid var(--line);padding:7px 9px;border-radius:8px;font-size:12px;display:flex;gap:7px;align-items:center;margin:0;font-weight:500;color:#33415c}
+
+/* dropzone */
+.dropzone{border:2px dashed #cdd9e8;border-radius:12px;padding:18px;text-align:center;color:var(--muted);cursor:pointer;font-size:13px;transition:.15s}
+.dropzone:hover,.dropzone.drag{border-color:var(--blue);background:var(--blue-bg)}
+.imgpreview{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.imgpreview .ph{position:relative;width:70px;height:70px}
+.imgpreview img{width:70px;height:70px;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
+.imgpreview .rm{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:12px;display:grid;place-items:center;padding:0}
+.uploadhint{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* ---------- Dashboard order cards ---------- */
+.ordcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;align-items:start}
+@media(max-width:640px){.ordcards{grid-template-columns:minmax(0,1fr)}}
+.ordcard{border:1px solid var(--line);border-radius:14px;padding:14px 16px;transition:.15s}
+.ordcard:hover{border-color:#cdd9e8;box-shadow:0 4px 14px rgba(20,40,70,.06)}
+.ordcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.ordcard-id{font-weight:700;font-size:14px}
+.ordcard-date{color:var(--muted);font-size:12px;margin-top:1px}
+.ordcard-body{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:14px;margin-top:10px;align-items:start}
+.ordcard-info{display:flex;flex-direction:column;gap:4px;font-size:13px;min-width:0}
+.ordcard-info .nm{font-weight:600}
+.ordcard-info .muted2{color:var(--muted);font-size:12.5px}
+.ordcard-addr{display:flex;gap:6px;align-items:flex-start;color:#41506b;font-size:12.5px;margin-top:2px}
+.ordcard-addr svg{width:13px;height:13px;color:#8aa0bd;flex:none;margin-top:2px}
+.ordcard-imgs{display:flex;gap:6px;flex-wrap:wrap;justify-self:end}
+.ordcard-imgs img{width:38px;height:38px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:pointer}
+.ordcard-noimg{width:38px;height:38px;border-radius:8px;background:#f1f5fa;display:grid;place-items:center;color:#b7c4d8}
+.ordcard-noimg svg{width:16px;height:16px}
+.ordcard-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px}
+
+/* ---------- Toast ---------- */
+.toasts{position:fixed;bottom:20px;right:20px;z-index:99;display:flex;flex-direction:column;gap:8px}
+.toast{background:#10233a;color:#fff;padding:12px 16px;border-radius:11px;font-size:13px;font-weight:500;box-shadow:0 12px 30px rgba(0,0,0,.3);display:flex;gap:9px;align-items:center;animation:tin .25s}
+.toast.ok{border-left:4px solid #22c55e}.toast.err{border-left:4px solid #ef4444}
+@keyframes tin{from{transform:translateY(10px);opacity:0}}
+
+/* ---------- Chart ---------- */
+.chartbox{padding:16px 18px}
+canvas.chart{width:100%;height:220px}
+.barrow{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12.5px}
+.barrow .k{width:90px;color:var(--muted);flex:none}
+.bartrack{flex:1;height:9px;background:#eef2f8;border-radius:99px;overflow:hidden}
+.barfill{height:100%;background:var(--blue);border-radius:99px}
+.barrow .v{width:40px;text-align:right;font-weight:700;flex:none}
+
+/* ---------- Responsive ---------- */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-102%)}
+  body.sopen .sidebar{transform:none}
+  .sidebar-close{display:flex}
+  .main{margin-left:0}
+  .main,.content{max-width:100vw}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .content{padding:16px 14px 34px}
+  .row2,.row3{grid-template-columns:minmax(0,1fr)}
+  .split{grid-template-columns:minmax(0,1fr)!important}
+  .preview{display:none}
+  .gsearch{max-width:none}
+  .prow .pmeta{display:none}
+}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.scard{padding:12px}.snum{font-size:19px}.sic{width:36px;height:36px}.sic svg{width:17px;height:17px}}
+html,body{overflow-x:hidden;max-width:100%;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch}
+.snav,.content,.tablewrap,.mbox{-webkit-overflow-scrolling:touch}
+
+/* ---- added: hints, viewer, category actions ---- */
+.hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+.ibtn[disabled]{cursor:default}
+.act{flex-wrap:wrap}
+.imgv{position:fixed;inset:0;z-index:9999;background:#0b1220;display:flex;flex-direction:column;color:#fff}
+.imgv-bar{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08)}
+.imgv-back{border:0;background:#2563eb;color:#fff;border-radius:10px;padding:9px 16px;font-weight:600;font-size:14px}
+.imgv-title{flex:1;font-weight:600;font-size:14px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imgv-tools{display:flex;align-items:center;gap:8px}
+.imgv-tools button{width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:20px;line-height:1;padding:0}
+.imgv-pct{min-width:44px;text-align:center;font-size:12.5px;opacity:.85}
+.imgv-stage{flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.imgv-img{max-width:min(86vw,560px);max-height:56vh;object-fit:contain;border-radius:12px;background:#111a2b;box-shadow:0 12px 40px rgba(0,0,0,.5);transform-origin:50% 50%;will-change:transform;cursor:zoom-in;-webkit-user-drag:none}
+.imgv-img.zoomed{cursor:grab}
+.imgv-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));font-size:12.5px;opacity:.85}
+.imgv-foot a{color:#9ec1ff}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login" class="login">
+  <div class="lbox">
+    <div class="lmark" id="lmark"><img src="" id="lmarkImg" alt="logo"></div>
+    <h1 id="lbrand">SignageStore</h1>
+    <div class="muted" id="lsub">Admin Panel</div>
+    <form id="loginForm">
+      <label>Email / Username</label>
+      <input id="loginId" autocomplete="username" required>
+      <label>Password</label>
+      <input id="loginPw" type="password" autocomplete="current-password" required>
+      <button class="btn btn-p btn-block" id="loginBtn" type="submit">Log in</button>
+      <div id="loginErr" class="err"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+    <div id="app" class="app">
+  <aside class="sidebar" id="sidebar">
+<div class="sidebar-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 14px;border-bottom:1px solid rgba(255,255,255,.07)">
+  <div class="brand">
+    <div class="bmark" id="bmark"><img src="" id="bmarkImg" alt="logo"></div>
+    <div><div class="bname" id="bname">SignageStore</div><div class="bsub" id="bsub">Admin Panel</div></div>
+  </div>
+  <button class="sidebar-close" id="sidebarClose" aria-label="Close menu" type="button">×</button>
+</div>
+    <nav class="snav" id="snav"></nav>
+    <div class="sfoot">
+      <div class="online"><span class="dot"></span><span>Store Online<small>Your store is live and running</small></span></div>
+    </div>
+  </aside><div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="hamb" id="hamb" aria-label="Menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="gsearch">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+        <input id="topSearch" placeholder="Search products, orders, customers...">
+      </div>
+      <div class="dd" id="bellDD">
+        <button class="tbtn" id="bellBtn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>
+          <span class="tbadge" id="bellBadge" style="display:none">0</span>
+        </button>
+        <div class="ddmenu" id="bellMenu" style="min-width:320px"></div>
+      </div>
+      <div class="dd" id="profDD">
+        <div class="prow" id="profBtn">
+          <div class="pav" id="pav">A</div>
+          <div class="pmeta"><div class="pname" id="pname">Admin</div><div class="prole" id="prole">—</div></div>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="ddmenu" id="profMenu">
+          <div class="ddhead" id="profHead">Account</div>
+          <button class="pmenu-item red" id="logout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div id="modal" class="modal"><div class="mbox">
+  <h2 id="modalTitle"></h2>
+  <div id="modalBody"></div>
+  <div class="mactions">
+    <button class="btn btn-o" id="modalCancel">Cancel</button>
+    <button class="btn btn-p" id="modalSave">Save</button>
+  </div>
+</div></div>
+
+<div class="toasts" id="toasts"></div>
+<script>
+/* ================= CONFIG ================= */
+const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbxlXSdj04pIe1eeZb6kDLH_bqfKAyLCBo9uNVZiZjh3_xmsLtb2WDaxvenXOv-7wqHH/exec';
+const BRAND_LOGO = 'data:image/webp;base64,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';
+const BRAND = { name:'SignageStore', sub:'Admin Panel', logo:'LT' };
+const DEFAULT_CATEGORIES = ['LED Sign Boards','3D Sign Board','Glow Sign Board','Outdoor Signages','Digital Signages','Safety and Road Signages','ACP Signages','Metal Signages','Neon Signages','Wall & Decorative Art','Handmade Crafts','Custom Designs','Name & letter Designs','Business & Shop Designs','Photo & Event Decor'];
+const ORDER_STATUSES = ['Pending','Confirmed','Processing','Shipped','Delivered','Cancelled'];
+const QUOTE_STATUSES = ['New','Contacted','Closed'];
+const ALL_PERMS = ['products.view','products.create','products.edit','products.delete','products.images',
+  'orders.view','orders.customer_details','orders.update_status','orders.cancel','orders.delete',
+  'posts.view','posts.create','posts.edit','posts.delete','posts.images',
+  'admins.view','admins.create','admins.edit','admins.delete','admins.activate','admins.permissions','admins.password_reset',
+  'logs.view','settings.view',
+  'categories.view','categories.create','categories.edit','categories.delete',
+  'designs.view','designs.create','designs.edit','designs.delete',
+  'reviews.view','reviews.moderate','reviews.delete',
+  'comments.view','comments.moderate','comments.delete',
+  'notifications.view','notifications.manage','analytics.view','customers.view',
+  'quotes.view','quotes.update_status'];
+
+const IC = {
+ dash:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+ orders:'<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+ box:'<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 15.2c2.6.3 4.6 1.9 5.5 4.8"/>',
+ star:'<path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-3-5.4 3 1.1-6L3.2 9.4l6.1-.8L12 3z"/>',
+ comment:'<path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/>',
+ chart:'<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
+ bell:'<path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/>',
+ shield:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/>',
+ logs:'<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/>',
+ eye:'<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>',
+ pen:'<path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/>',
+ trash:'<path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ filter:'<path d="M4 5h16l-6 7v6l-4 2v-8L4 5z"/>',
+ cube:'<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ layers:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+ money:'<circle cx="12" cy="12" r="9"/><path d="M9 8.5h6M9 12h6M12 8.5V17"/>',
+ chev:'<path d="M6 9l6 6 6-6"/>',
+ pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/>',
+ image:'<rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5.5-5.5a2 2 0 0 1 2.8 0L20 20"/>'
+};
+function ic(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+IC[n]+'</svg>';}
+
+/* ================= STATE / HELPERS ================= */
+let sessionToken = sessionStorage.getItem('sp_admin_session') || '';
+let me = null, cache = {};
+let S = { sec:'dashboard', ordersTab:'orders', page:{}, selProd:null, selDesign:null, unread:0 };
+let NAVDEF = [];
+
+async function api(action, payload={}){
+  const r = await fetch(ADMIN_API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({action, token:sessionToken, payload})});
+  const text = await r.text();
+  let j; try{ j = JSON.parse(text); }catch(e){ throw new Error('Unexpected server response.'); }
+  if(!j.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+function esc(x){ return String(x ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function can(p){ return me?.role==='SUPER_ADMIN' || (me?.permissions||[]).includes(p); }
+function fmtDate(s){ if(!s) return '—'; try{ return new Date(s).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return s; } }
+function fmtDay(s){ if(!s) return '—'; try{ return new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return s; } }
+function fmtDateTime(s){ if(!s) return '—'; try{ const d=new Date(s); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+' · '+d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true}); }catch(e){ return s; } }
+function parseImages(v){ if(Array.isArray(v)) return v; if(typeof v==='string'){ try{ const p=JSON.parse(v); return Array.isArray(p)?p:[]; }catch(e){ return []; } } return []; }
+function driveThumb(u,sz){ var m=String(u||'').match(/\/d\/([a-zA-Z0-9_-]+)/); return m?('https://drive.google.com/thumbnail?id='+m[1]+'&sz='+(sz||'w200')):u; }
+function imgErr(el){ var p=el.closest('.ordcard-imgs'); if(p) p.innerHTML='<div class="ordcard-noimg">'+ic('image')+'</div>'; else el.style.display='none'; }
+function addrLine(o){ return [o.address,o.city,o.district,o.state,o.pincode,o.country].map(x=>String(x||'').trim()).filter(Boolean).join(', '); }
+function money(n){ const x = Number(n||0); return '₹' + x.toLocaleString('en-IN'); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function toast(msg, type='ok'){ const t=document.createElement('div'); t.className='toast '+type; t.textContent=msg; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(), 3500); }
+function debounce(fn, ms){ let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a), ms); }; }
+function catPill(cat){
+  const palette=['info','pu','te','cy','warn','bad','ok','off'];
+  let h=0; for(const ch of String(cat||'?')) h=(h*31+ch.charCodeAt(0))>>>0;
+  return '<span class="pill '+palette[h%palette.length]+'">'+esc(cat||'—')+'</span>';
+}
+function statusPill(s){
+  s=String(s||'');
+  if(['Active','Available','ACTIVE','APPROVED','Delivered','Closed'].includes(s)) return '<span class="pill ok">'+esc(s)+'</span>';
+  if(['Inactive','Unavailable','INACTIVE','HIDDEN','Cancelled'].includes(s)) return '<span class="pill bad">'+esc(s)+'</span>';
+  if(['Pending','PENDING','Processing','New','Contacted'].includes(s)) return '<span class="pill warn">'+esc(s)+'</span>';
+  return '<span class="pill info">'+esc(s)+'</span>';
+}
+function stars(n){ n=Math.round(Number(n||0)); let o=''; for(let i=1;i<=5;i++) o+= i<=n?'★':'☆'; return '<span style="color:var(--amber);letter-spacing:2px">'+o+'</span>'; }
+function emptyBox(msg){ return '<div class="empty">'+ic('box')+'<div>'+esc(msg)+'</div></div>'; }
+function pageArr(arr, key, per=8){
+  const p = S.page[key] || 1;
+  const total = arr.length, pages = Math.max(1, Math.ceil(total/per));
+  const cur = Math.min(p, pages);
+  return { rows: arr.slice((cur-1)*per, cur*per), cur, pages, total, per,
+    from: total? (cur-1)*per+1 : 0, to: Math.min(cur*per, total) };
+}
+function pagerHtml(pg, key){
+  let btns='';
+  for(let i=1;i<=pg.pages;i++){
+    if(pg.pages>7 && i>2 && i<pg.pages-1 && Math.abs(i-pg.cur)>1){ if(i===3) btns+='<button disabled>…</button>'; continue; }
+    btns+='<button class="'+(i===pg.cur?'cur':'')+'" onclick="setPage(\''+key+'\','+i+')">'+i+'</button>';
+  }
+  return '<div class="tfoot"><span class="muted">Showing '+pg.from+' to '+pg.to+' of '+pg.total+' entries</span>'+
+    '<div class="pager"><button '+(pg.cur<=1?'disabled':'')+' onclick="setPage(\''+key+'\','+(pg.cur-1)+')">‹</button>'+btns+
+    '<button '+(pg.cur>=pg.pages?'disabled':'')+' onclick="setPage(\''+key+'\','+(pg.cur+1)+')">›</button></div></div>';
+}
+function setPage(key, p){ S.page[key]=p; rerender(); }
+
+/* ================= NAV ================= */
+function buildNav(){
+  const pend = cache.orders ? cache.orders.filter(o=>o.status==='Pending').length : 0;
+  NAVDEF = [
+    {id:'dashboard', label:'Dashboard', icon:'dash'},
+    {id:'orders', label:'Orders', icon:'orders', perm:'orders.view', badge:pend},
+    {id:'products', label:'Products', icon:'box', perm:'products.view', children:[
+      {id:'products', label:'All Products'},
+      {id:'product-add', label:'Add Product', perm:'products.create'},
+      {id:'categories', label:'Categories', perm:'categories.view'},
+      {id:'designs', label:'Product Base Design', perm:'designs.view'}]},
+    {id:'customers', label:'Customers', icon:'users', perm:'customers.view'},
+    {id:'reviews', label:'Reviews', icon:'star', perm:'reviews.view'},
+    {id:'comments', label:'Comments', icon:'comment', perm:'comments.view'},
+    {id:'analytics', label:'Analytics', icon:'chart', perm:'analytics.view'},
+    {id:'notifications', label:'Notifications', icon:'bell', perm:'notifications.view'},
+    {id:'admins', label:'Admins / Sub Admins', icon:'shield', perm:'admins.view'},
+    {id:'logs', label:'Activity Logs', icon:'logs', perm:'logs.view'},
+    {id:'settings', label:'Settings', icon:'gear', perm:'settings.view'}
+  ];
+  const el = document.getElementById('snav');
+  el.innerHTML = NAVDEF.filter(n=>!n.perm || can(n.perm)).map(n=>{
+    const kids = (n.children||[]).filter(c=>!c.perm || can(c.perm));
+    const active = S.sec===n.id || kids.some(c=>c.id===S.sec);
+    let h = '<button class="nitem'+(active?' active open':'')+'" data-nav="'+n.id+'">'+ic(n.icon)+'<span>'+n.label+'</span>'+
+      (n.badge?'<span class="nbadge">'+n.badge+'</span>':'')+
+      (kids.length?'<span class="caret">'+ic('chev')+'</span>':'')+'</button>';
+    if(kids.length) h += '<div class="nsub'+(active?' open':'')+'">'+kids.map(c=>
+      '<button class="nitem'+(S.sec===c.id?' active':'')+'" data-nav="'+c.id+'"><span>'+c.label+'</span></button>').join('')+'</div>';
+    return h;
+  }).join('');
+  el.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{ go(b.dataset.nav); document.body.classList.remove('sopen'); });
+}
+
+/* ================= SECTION ROUTER ================= */
+const BUILDERS = {};
+function go(sec){
+  S.sec = sec;
+  if(sec==='product-add'){ S.sec='products'; go2('products'); openProductForm(null); return; }
+  go2(sec);
+}
+function go2(sec){
+  S.sec = sec; S.page = {};
+  buildNav();
+  const c = document.getElementById('content');
+  c.innerHTML = '<div class="empty">Loading…</div>';
+  loadSection(sec).catch(e=>{ c.innerHTML = emptyBox(e.message); });
+}
+function rerender(){ go2_keep(); }
+function go2_keep(){
+  const c = document.getElementById('content');
+  BUILDERS[S.sec] && (c.innerHTML = BUILDERS[S.sec]());
+  loadSection(S.sec, true).catch(e=>toast(e.message,'err'));
+}
+
+async function loadSection(sec, soft){
+  const c = document.getElementById('content');
+  if(!soft && BUILDERS[sec]) c.innerHTML = BUILDERS[sec]();
+  if(sec==='dashboard') return loadDashboard();
+  if(sec==='orders') return loadOrders();
+  if(sec==='products') return loadProducts();
+  if(sec==='categories') return loadCategories();
+  if(sec==='designs') return loadDesigns();
+  if(sec==='customers') return loadCustomers();
+  if(sec==='reviews') return loadReviews();
+  if(sec==='comments') return loadComments();
+  if(sec==='analytics') return loadAnalytics();
+  if(sec==='notifications') return loadNotificationsPage();
+  if(sec==='admins') return loadAdmins();
+  if(sec==='logs') return loadLogs();
+  if(sec==='settings') return loadSettings();
+}
+
+/* ================= IMAGE UPLOAD WIDGET ================= */
+function imageUploadWidget(existing, label){
+  const state = { images: (existing||[]).slice() };
+  const id = 'iw_' + Math.random().toString(36).slice(2);
+  window.__imgStates = window.__imgStates || {};
+  window.__imgStates[id] = state;
+  setTimeout(()=>wireImageWidget(id, state), 0);
+  return { html: '<label>'+(label||'Photos')+'</label>'+
+    '<div class="dropzone" id="'+id+'_drop">Tap to choose photos from your gallery or computer, or drop them here</div>'+
+    '<input type="file" id="'+id+'_file" accept="image/*" multiple style="display:none">'+
+    '<div class="imgpreview" id="'+id+'_preview"></div>'+
+    '<div class="uploadhint" id="'+id+'_hint"></div>', state };
+}
+function wireImageWidget(id, state){
+  const drop=document.getElementById(id+'_drop'); if(!drop) return;
+  const file=document.getElementById(id+'_file'), preview=document.getElementById(id+'_preview'), hint=document.getElementById(id+'_hint');
+  function render(){
+    preview.innerHTML = state.images.map((u,i)=>'<div class="ph"><img src="'+esc(u)+'">'+(i===0?'<span style="position:absolute;bottom:3px;left:3px;background:#2563eb;color:#fff;font-size:9px;padding:1px 6px;border-radius:6px">MAIN</span>':'')+'<button type="button" class="rm" data-i="'+i+'">×</button></div>').join('');
+    preview.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{ state.images.splice(+b.dataset.i,1); render(); });
+  }
+  render();
+  drop.onclick=()=>file.click();
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag');};
+  drop.ondragleave=()=>drop.classList.remove('drag');
+  drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');handle(e.dataTransfer.files);};
+  file.onchange=()=>handle(file.files);
+  async function handle(fl){
+    const files=Array.from(fl||[]); if(!files.length) return;
+    hint.textContent='Uploading '+files.length+' photo(s)...';
+    for(const f of files){
+      try{
+        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+        const resp=await api('media.upload',{data:dataUrl,filename:f.name});
+        state.images.push(resp.url); render();
+      }catch(e){ hint.textContent='Upload failed: '+e.message; return; }
+    }
+    hint.textContent=''; file.value='';
+  }
+}
+
+/* ================= MODAL ================= */
+function openModal(title, body, save){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modal').classList.add('on');
+  document.getElementById('modalSave').onclick=save;
+  document.getElementById('modalSave').textContent='Save';
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('on');
+  document.body.style.overflow='';
+}
+document.getElementById('modalCancel').onclick=closeModal;
+async function withSaving(fn){
+  const b=document.getElementById('modalSave'); b.disabled=true; const old=b.textContent; b.textContent='Saving...';
+  try{ await fn(); }catch(e){ toast(e.message,'err'); } finally{ b.disabled=false; b.textContent=old; }
+}
+function confirmAction(msg){
+  return new Promise(res=>{
+    openModal('Please confirm', '<p style="margin:6px 0 0">'+esc(msg)+'</p>', async()=>{ closeModal(); res(true); });
+    document.getElementById('modalSave').textContent='Yes, continue';
+    const orig=document.getElementById('modalCancel').onclick;
+    document.getElementById('modalCancel').onclick=()=>{ closeModal(); res(false); };
+  });
+}
+</script>
+<script>
+/* ================= DASHBOARD ================= */
+BUILDERS.dashboard = ()=>`
+  <div class="phead"><div><h1>Dashboard</h1><div class="psub">Live overview of your store — real data from your database.</div></div></div>
+  <div class="stats" id="dashStats"></div>
+  <div class="card cardpad" style="margin-bottom:16px"><div class="ctitle">Orders by Status</div><div id="dashStatus"><span class="muted">Loading…</span></div></div>
+  <div class="card cardpad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="ctitle" style="margin:0">Recent Orders — with uploaded image &amp; address</div>
+      <a href="javascript:void(0)" onclick="go('orders')" style="font-size:12.5px;font-weight:600;color:var(--blue)">View all →</a>
+    </div>
+    <div id="dashOrders">${emptyBox('Loading…')}</div>
+  </div>`;
+
+async function loadDashboard(){
+  const el=document.getElementById('dashStats');
+  let a={};
+  if(can('analytics.view')){ try{ a=await api('analytics.summary'); }catch(e){} }
+  else {
+    try{
+      const [p,o]=await Promise.all([can('products.view')?api('products.list'):{products:[]}, can('orders.view')?api('orders.list'):{orders:[]}]);
+      a={productsTotal:p.products.length, ordersTotal:o.orders.length, byStatus:{}, revenue:0, todayRevenue:0, customers:0};
+      o.orders.forEach(x=>{ a.byStatus[x.status]=(a.byStatus[x.status]||0)+1; if(x.status!=='Cancelled'){ a.revenue+=Number(x.total||0); a.todayRevenue+=String(x.date||'').slice(0,10)===todayISO()?Number(x.total||0):0; }});
+    }catch(e){}
+  }
+  const pend=(a.byStatus&&a.byStatus.Pending)||0;
+  const cards=[
+    {l:'Total Orders',n:a.ordersTotal??'—',i:'orders',c:'b'},
+    {l:'Pending Orders',n:pend,i:'clock',c:'a'},
+    {l:'Total Products',n:a.productsTotal??'—',i:'box',c:'p'},
+    {l:'Revenue',n:(a.revenue!==undefined)?money(a.revenue):'—',i:'money',c:'g'}
+  ];
+  el.innerHTML=cards.map(x=>'<div class="scard"><div class="sic '+x.c+'">'+ic(x.i)+'</div><div><div class="slabel">'+x.l+'</div><div class="snum">'+x.n+'</div></div></div>').join('');
+  const st=document.getElementById('dashStatus');
+  const bs=a.byStatus||{};
+  const max=Math.max(1,...Object.values(bs));
+  st.innerHTML=Object.keys(bs).length?ORDER_STATUSES.filter(s=>bs[s]).map(s=>
+    '<div class="barrow"><span class="k">'+s+'</span><div class="bartrack"><div class="barfill" style="width:'+Math.round(bs[s]/max*100)+'%"></div></div><span class="v">'+bs[s]+'</span></div>').join('')
+    :'<span class="muted">No orders yet.</span>';
+  const od=document.getElementById('dashOrders');
+  if(can('orders.view')){
+    try{
+      const r=await api('orders.list');
+      const rows=r.orders.slice(-8).reverse();
+      od.innerHTML = rows.length? '<div class="ordcards">'+rows.map(o=>{
+        const files=parseImages(o.files);
+        const addr=addrLine(o);
+        return '<div class="ordcard">'
+          +'<div class="ordcard-top"><div><div class="ordcard-id">'+esc(o.id)+'</div><div class="ordcard-date">'+fmtDateTime(o.date)+'</div></div>'+statusPill(o.status)+'</div>'
+          +'<div class="ordcard-body">'
+            +'<div class="ordcard-info">'
+              +'<div class="nm">'+esc(o.name||'—')+'</div>'
+              +'<div class="muted2">'+esc(o.mobile||'')+(o.whatsapp&&o.whatsapp!==o.mobile?' · WA '+esc(o.whatsapp):'')+'</div>'
+              +'<div class="muted2">'+esc(o.products||'')+(o.total?' · '+money(o.total):'')+'</div>'
+              +(addr?'<div class="ordcard-addr">'+ic('pin')+'<span>'+esc(addr)+'</span></div>':'<div class="ordcard-addr muted2">No address on this order</div>')
+            +'</div>'
+            +'<div class="ordcard-imgs">'+(files.length?files.slice(0,3).map(u=>'<img src="'+esc(driveThumb(u,'w200'))+'" onclick="viewOrder(\''+esc(o.id)+'\')" onerror="imgErr(this)">').join(''):'<div class="ordcard-noimg">'+ic('image')+'</div>')+'</div>'
+          +'</div>'
+          +'<div class="ordcard-foot"><button class="ibtn v" onclick="viewOrder(\''+esc(o.id)+'\')" style="width:auto;padding:0 12px;gap:6px;display:inline-flex;align-items:center;font-size:12.5px;font-weight:600">'+ic('eye')+'Full details</button></div>'
+        +'</div>';
+      }).join('')+'</div>' : emptyBox('No orders yet.');
+    }catch(e){ od.innerHTML=emptyBox(e.message); }
+  } else od.innerHTML=emptyBox('No permission to view orders.');
+  refreshBell();
+}
+
+/* ================= PRODUCTS ================= */
+BUILDERS.products = ()=>`
+  <div class="phead"><div><h1>Products</h1><div class="psub">Manage your signage products — everything here is stored in your database.</div></div>
+    ${can('products.create')?'<button class="btn btn-p" id="addProdBtn">'+ic('plus')+'Add New Product</button>':''}</div>
+  <div class="stats" id="prodStats"></div>
+  <div class="split" id="prodSplit">
+    <div>
+      <div class="toolbar">
+        <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+          <input id="prodSearch" placeholder="Search products..."></div>
+        <select id="prodCat"><option value="">All Categories</option></select>
+        <select id="prodStatus"><option value="">All Status</option><option>Available</option><option>Unavailable</option></select>
+        <button class="btn btn-o">${ic('filter')}Filter</button>
+      </div>
+      <div class="card"><div class="tablewrap" id="prodTable">${emptyBox('Loading…')}</div><div id="prodPager"></div></div>
+    </div>
+    <div class="preview" id="prodPreview"><div class="card cardpad"><span class="muted">Select a product and click the eye icon to preview it here.</span></div></div>
+  </div>`;
+
+function productStats(list){
+  const act=list.filter(p=>(p.availability||'Available')==='Available').length;
+  const today=list.filter(p=>String(p.createdAt||'').slice(0,10)===todayISO()).length;
+  const el=document.getElementById('prodStats'); if(!el) return;
+  el.innerHTML=[
+    {l:'Total Products',n:list.length,i:'cube',c:'b'},
+    {l:'Active',n:act,i:'check',c:'g'},
+    {l:'Inactive',n:list.length-act,i:'clock',c:'a'},
+    {l:'Today Added',n:today,i:'plus',c:'p'}
+  ].map(x=>'<div class="scard"><div class="sic '+x.c+'">'+ic(x.i)+'</div><div><div class="slabel">'+x.l+'</div><div class="snum">'+x.n+'</div></div></div>').join('');
+}
+
+async function loadProducts(){
+  if(!can('products.view')){ document.getElementById('prodTable').innerHTML=emptyBox('No permission: products.view'); return; }
+  if(can('categories.view')){ try{ cache.categories=(await api('categories.list')).categories; }catch(e){} }
+  cache.products=(await api('products.list')).products;
+  const catSel=document.getElementById('prodCat');
+  const cats=[...new Set(cache.products.map(p=>p.category).filter(Boolean))];
+  catSel.innerHTML='<option value="">All Categories</option>'+cats.map(c=>'<option>'+esc(c)+'</option>').join('');
+  document.getElementById('prodSearch').oninput=debounce(renderProducts,250);
+  catSel.onchange=renderProducts;
+  document.getElementById('prodStatus').onchange=renderProducts;
+  const add=document.getElementById('addProdBtn');
+  if(add) add.onclick=()=>openProductForm(null);
+  renderProducts();
+}
+
+function renderProducts(){
+  const list=cache.products||[];
+  productStats(list);
+  const q=(document.getElementById('prodSearch').value||'').toLowerCase();
+  const cat=document.getElementById('prodCat').value, st=document.getElementById('prodStatus').value;
+  let a=list.filter(p=>{
+    if(cat && p.category!==cat) return false;
+    if(st && (p.availability||'Available')!==st) return false;
+    return !q || JSON.stringify(p).toLowerCase().includes(q);
+  });
+  a=a.slice().reverse();
+  const pg=pageArr(a,'products',8);
+  const t=document.getElementById('prodTable');
+  if(!a.length){ t.innerHTML=emptyBox('No products match. Click "Add New Product" to create one.'); document.getElementById('prodPager').innerHTML=''; return; }
+  t.innerHTML='<table><thead><tr><th>#</th><th>Image</th><th>Title</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    pg.rows.map((p,i)=>{
+      const imgs=parseImages(p.images);
+      const thumb=imgs[0]?'<img class="tthumb" src="'+esc(imgs[0])+'" loading="lazy">':'<div class="tthumb"></div>';
+      const n=(pg.cur-1)*pg.per+i+1;
+      return '<tr><td class="muted">'+n+'</td><td>'+thumb+'</td>'+
+        '<td><div class="ttitle">'+esc(p.name)+'</div><div class="tsub">'+esc(String(p.description||'').slice(0,60))+'</div></td>'+
+        '<td>'+catPill(p.category)+'</td><td class="ttitle">'+(p.price?esc(p.price):'—')+'</td>'+
+        '<td>'+statusPill(p.availability||'Available')+'</td>'+
+        '<td><div class="act"><button class="ibtn v" title="Preview" onclick="previewProduct(\''+esc(p.id)+'\')">'+ic('eye')+'</button>'+
+        (can('products.edit')?'<button class="ibtn e" title="Edit" onclick="openProductForm(\''+esc(p.id)+'\')">'+ic('pen')+'</button>':'')+
+        (can('products.delete')?'<button class="ibtn d" title="Delete" onclick="deleteProduct(\''+esc(p.id)+'\')">'+ic('trash')+'</button>':'')+
+        '</div></td></tr>';
+    }).join('')+'</tbody></table>';
+  document.getElementById('prodPager').innerHTML=pagerHtml(pg,'products');
+  if(S.selProd) previewProduct(S.selProd, true);
+}
+
+function previewProduct(id, soft){
+  S.selProd=id;
+  const p=(cache.products||[]).find(x=>String(x.id)===String(id));
+  const el=document.getElementById('prodPreview'); if(!el||!p) return;
+  const imgs=parseImages(p.images);
+  el.innerHTML='<div class="card cardpad">'+
+    '<div class="ctitle">Product Preview</div>'+
+    (imgs[0]?'<img class="pv-img" src="'+esc(imgs[0])+'">':'<div class="pv-img"></div>')+
+    '<div class="pv-title"><span>'+esc(p.name)+'</span>'+statusPill(p.availability||'Available')+'</div>'+
+    '<div class="pv-meta">'+
+    '<div class="pv-row">'+ic('layers')+'<span class="k">Category</span><span class="v">'+esc(p.category||'—')+'</span></div>'+
+    (p.subcategory?'<div class="pv-row">'+ic('tag')+'<span class="k">Subcategory</span><span class="v">'+esc(p.subcategory)+'</span></div>':'')+
+    (p.material?'<div class="pv-row">'+ic('cube')+'<span class="k">Material</span><span class="v">'+esc(p.material)+'</span></div>':'')+
+    (p.size?'<div class="pv-row">'+ic('box')+'<span class="k">Size</span><span class="v">'+esc(p.size)+'</span></div>':'')+
+    '<div class="pv-row">'+ic('money')+'<span class="k">Price</span><span class="v">'+(p.price?esc(p.price):'—')+'</span></div>'+
+    '</div><hr class="hr"><div class="ctitle">Quick Actions</div><div class="qa">'+
+    (can('products.edit')?'<button class="btn btn-p" onclick="openProductForm(\''+esc(p.id)+'\')">'+ic('pen')+'Edit Product</button>':'')+
+    (can('products.create')?'<button class="btn btn-o" onclick="duplicateProduct(\''+esc(p.id)+'\')">'+ic('cube')+'Duplicate</button>':'')+
+    (can('products.delete')?'<button class="btn btn-danger" onclick="deleteProduct(\''+esc(p.id)+'\')">'+ic('trash')+'Delete</button>':'')+
+    '</div><div class="tips"><b>💡 Product Tips</b><p>Use high-quality images and clear dimensions to get better customer orders.</p></div></div>';
+}
+
+function productForm(p={}){
+  const img=imageUploadWidget(parseImages(p.images));
+  window.__pimg=img.state;
+  const cats=cache.categories&&cache.categories.length?cache.categories.map(c=>c.name):DEFAULT_CATEGORIES;
+  return `
+  <div class="row2">
+    <div style="grid-column:1/-1"><label>Product Name *</label><input id="f_name" value="${esc(p.name||'')}"></div>
+    <div style="grid-column:1/-1"><label>Short Description</label><textarea id="f_desc">${esc(p.description||'')}</textarea></div>
+    <div><label>Category</label><select id="f_cat">${cats.map(c=>'<option '+(p.category===c?'selected':'')+'>'+esc(c)+'</option>').join('')}</select></div>
+    <div><label>Subcategory</label><input id="f_sub" value="${esc(p.subcategory||'')}" placeholder="e.g. Backlit LED Signs"></div>
+    <div><label>Product Type</label><input id="f_type" value="${esc(p.type||'')}" placeholder="e.g. Backlit LED"></div>
+    <div><label>Material</label><input id="f_material" value="${esc(p.material||'')}" placeholder="e.g. Acrylic + LED"></div>
+    <div><label>Size / Dimensions</label><input id="f_size" value="${esc(p.size||'')}" placeholder="e.g. Custom (Any Size)"></div>
+    <div><label>Availability</label><select id="f_avail">
+      <option ${(p.availability||'Available')==='Available'?'selected':''}>Available</option>
+      <option ${p.availability==='Unavailable'?'selected':''}>Unavailable</option></select></div>
+    <div><label>Price (manual)</label><input id="f_price" value="${esc(p.price||'')}" placeholder="₹25,000 or Get a Quote"></div>
+    <div><label>Price Note</label><input id="f_pnote" value="${esc(p.priceNote||'')}" placeholder="e.g. Starting from / per sq.ft"></div>
+    <div><label>Tags (comma separated)</label><input id="f_tags" value="${esc(p.tags||'')}"></div>
+    <div><label>Featured</label><select id="f_feat"><option value="" ${!p.featured?'selected':''}>No</option><option value="1" ${p.featured?'selected':''}>Yes</option></select></div>
+  </div>
+  ${img.html}
+  <div class="msec">SEO</div>
+  <div class="row2">
+    <div><label>SEO Title</label><input id="f_seot" value="${esc(p.seoTitle||'')}"></div>
+    <div><label>SEO Keywords</label><input id="f_seok" value="${esc(p.seoKeywords||'')}"></div>
+    <div style="grid-column:1/-1"><label>SEO Description</label><textarea id="f_seod">${esc(p.seoDesc||'')}</textarea></div>
+  </div>`;
+}
+function readProductForm(){
+  const s=window.__pimg;
+  return { name:val('f_name'), description:val('f_desc'), category:val('f_cat'), subcategory:val('f_sub'),
+    type:val('f_type'), material:val('f_material'), size:val('f_size'), availability:val('f_avail'),
+    price:val('f_price'), priceNote:val('f_pnote'), tags:val('f_tags'), featured:val('f_feat'),
+    seoTitle:val('f_seot'), seoKeywords:val('f_seok'), seoDesc:val('f_seod'), images:s.images };
+}
+function val(id){ const el=document.getElementById(id); return el?el.value:''; }
+
+function openProductForm(id){
+  if(id && !can('products.edit')) return;
+  if(!id && !can('products.create')) return;
+  const p=id?(cache.products||[]).find(x=>String(x.id)===String(id)):{};
+  openModal(id?'Edit Product':'Add New Product', productForm(p||{}), async()=>{
+    await withSaving(async()=>{
+      const data=readProductForm();
+      if(!data.name.trim()) throw new Error('Product name is required.');
+      if(id) await api('products.edit',{id,...data});
+      else await api('products.create',data);
+      closeModal(); toast(id?'Product updated':'Product created');
+      S.selProd=id||S.selProd;
+      if(S.sec==='products') await loadProducts();
+    });
+  });
+}
+async function duplicateProduct(id){
+  const p=(cache.products||[]).find(x=>String(x.id)===String(id)); if(!p) return;
+  await withSaving(async()=>{
+    const data={...p}; delete data.id; delete data.createdAt; delete data.updatedAt;
+    data.name=String(p.name||'')+' (Copy)';
+    await api('products.create',data);
+    toast('Product duplicated'); await loadProducts();
+  });
+}
+async function deleteProduct(id){
+  if(!await confirmAction('Delete this product? This cannot be undone.')) return;
+  try{ await api('products.delete',{id}); if(String(S.selProd)===String(id)) S.selProd=null; toast('Product deleted'); await loadProducts(); }
+  catch(e){ toast(e.message,'err'); }
+}
+
+/* ================= CATEGORIES ================= */
+BUILDERS.categories = ()=>`
+  <div class="phead"><div><h1>Categories</h1><div class="psub">Database-driven categories & subcategories used across your store.</div></div>
+    ${can('categories.create')?'<button class="btn btn-p" id="addCatBtn">'+ic('plus')+'Add Category</button>':''}</div>
+  <div class="card"><div class="tablewrap" id="catTable">${emptyBox('Loading…')}</div></div>`;
+
+async function loadCategories(){
+  if(!can('categories.view')){ document.getElementById('catTable').innerHTML=emptyBox('No permission: categories.view'); return; }
+  cache.categories=(await api('categories.list')).categories;
+  const b=document.getElementById('addCatBtn'); if(b) b.onclick=()=>openCategoryForm(null);
+  renderCategories();
+}
+function renderCategories(){
+  const list=(cache.categories||[]).slice().sort((a,b)=>(Number(a.sort)||0)-(Number(b.sort)||0));
+  const mains=list.filter(c=>!c.parentId), subs=list.filter(c=>c.parentId);
+  const t=document.getElementById('catTable');
+  if(!list.length){ t.innerHTML=emptyBox('No categories yet. Add your first category.'); return; }
+  const row=(c,depth)=>{ 
+    const kids=subs.filter(s=>String(s.parentId)===String(c.id)).length;
+    return '<tr><td>'+(depth?'<span style="padding-left:26px;color:#9db0c8">└─</span> ':'')+(c.image?'<img class="tthumb" style="display:inline-block;vertical-align:middle;margin-right:8px" src="'+esc(c.image)+'">':'')+'<span class="ttitle">'+esc(c.name)+'</span></td>'+
+    '<td class="tsub" style="max-width:280px">'+esc(String(c.description||'').slice(0,70))+'</td>'+
+    '<td>'+(depth?'<span class="pill off">Subcategory</span>':kids?'<span class="pill info">'+kids+' sub</span>':'<span class="pill off">Main</span>')+'</td>'+
+    '<td>'+statusPill(c.status)+'</td>'+
+    '<td><div class="act">'+
+    (can('categories.edit')?'<button class="ibtn e" onclick="openCategoryForm(\''+esc(c.id)+'\')">'+ic('pen')+'</button>':'')+
+    (can('categories.delete')?'<button class="ibtn d" onclick="deleteCategory(\''+esc(c.id)+'\')">'+ic('trash')+'</button>':'')+
+    '</div></td></tr>'; };
+  t.innerHTML='<table><thead><tr><th>Category</th><th>Description</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    mains.map(m=>row(m,0)+subs.filter(s=>String(s.parentId)===String(m.id)).map(s=>row(s,1)).join('')).join('')+
+    subs.filter(s=>!mains.some(m=>m.id===s.parentId)).map(s=>row(s,0)).join('')+
+    '</tbody></table>';
+}
+function openCategoryForm(id){
+  const c=id?(cache.categories||[]).find(x=>String(x.id)===String(id)):{};
+  const mains=(cache.categories||[]).filter(x=>!x.parentId && x.id!==id);
+  const img=imageUploadWidget(c.image?[c.image]:[],'Category Image');
+  window.__cimg=img.state;
+  openModal(id?'Edit Category':'Add Category', `
+    <label>Name *</label><input id="c_name" value="${esc(c.name||'')}">
+    <label>Description</label><textarea id="c_desc">${esc(c.description||'')}</textarea>
+    <div class="row2">
+      <div><label>Parent (for subcategory)</label><select id="c_parent"><option value="">— Main Category —</option>${mains.map(m=>'<option value="'+esc(m.id)+'" '+(String(c.parentId)===String(m.id)?'selected':'')+'>'+esc(m.name)+'</option>').join('')}</select></div>
+      <div><label>Sort Order</label><input id="c_sort" type="number" value="${esc(c.sort||0)}"></div>
+      <div><label>Status</label><select id="c_status"><option ${(c.status||'ACTIVE')==='ACTIVE'?'selected':''}>ACTIVE</option><option ${c.status==='INACTIVE'?'selected':''}>INACTIVE</option></select></div>
+    </div>
+    ${img.html}`, async()=>{
+    await withSaving(async()=>{
+      const data={name:val('c_name'),description:val('c_desc'),parentId:val('c_parent'),sort:val('c_sort'),status:val('c_status'),image:window.__cimg.images[0]||''};
+      if(!data.name.trim()) throw new Error('Category name is required.');
+      if(id) await api('categories.edit',{id,...data});
+      else await api('categories.create',data);
+      closeModal(); toast(id?'Category updated':'Category created'); await loadCategories();
+    });
+  });
+}
+async function deleteCategory(id){
+  if(!await confirmAction('Delete this category? Its subcategories will also be deleted.')) return;
+  try{ const r=await api('categories.delete',{id}); toast('Deleted '+(r.removed||1)+' item(s)'); await loadCategories(); }
+  catch(e){ toast(e.message,'err'); }
+}
+
+/* ================= PRODUCT BASE DESIGNS ================= */
+BUILDERS.designs = ()=>`
+  <div class="phead"><div><h1>Product Base Design</h1><div class="psub">Manage your signage product base designs (Acrylic, LED, Vinyl, etc.)</div></div>
+    ${can('designs.create')?'<button class="btn btn-p" id="addDesBtn">'+ic('plus')+'Add New Design</button>':''}</div>
+  <div class="stats" id="desStats"></div>
+  <div class="split">
+    <div>
+      <div class="toolbar">
+        <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+          <input id="desSearch" placeholder="Search designs..."></div>
+        <select id="desCat"><option value="">All Categories</option></select>
+        <select id="desStatus"><option value="">All Status</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select>
+        <button class="btn btn-o">${ic('filter')}Filter</button>
+      </div>
+      <div class="card"><div class="tablewrap" id="desTable">${emptyBox('Loading…')}</div><div id="desPager"></div></div>
+    </div>
+    <div class="preview" id="desPreview"><div class="card cardpad"><span class="muted">Select a design and click the eye icon to preview it here.</span></div></div>
+  </div>`;
+
+async function loadDesigns(){
+  if(!can('designs.view')){ document.getElementById('desTable').innerHTML=emptyBox('No permission: designs.view'); return; }
+  cache.designs=(await api('designs.list')).designs;
+  if(can('categories.view')){ try{ cache.categories=(await api('categories.list')).categories; }catch(e){} }
+  const cats=[...new Set(cache.designs.map(d=>d.category).filter(Boolean))];
+  document.getElementById('desCat').innerHTML='<option value="">All Categories</option>'+cats.map(c=>'<option>'+esc(c)+'</option>').join('');
+  document.getElementById('desSearch').oninput=debounce(renderDesigns,250);
+  document.getElementById('desCat').onchange=renderDesigns;
+  document.getElementById('desStatus').onchange=renderDesigns;
+  const b=document.getElementById('addDesBtn'); if(b) b.onclick=()=>openDesignForm(null);
+  renderDesigns();
+}
+function renderDesigns(){
+  const list=cache.designs||[];
+  const act=list.filter(d=>(d.status||'ACTIVE')==='ACTIVE').length;
+  const today=list.filter(d=>String(d.createdAt||'').slice(0,10)===todayISO()).length;
+  const st=document.getElementById('desStats');
+  st.innerHTML=[
+    {l:'Total Designs',n:list.length,i:'cube',c:'b'},
+    {l:'Active',n:act,i:'check',c:'g'},
+    {l:'Inactive',n:list.length-act,i:'clock',c:'a'},
+    {l:'Today Added',n:today,i:'plus',c:'p'}
+  ].map(x=>'<div class="scard"><div class="sic '+x.c+'">'+ic(x.i)+'</div><div><div class="slabel">'+x.l+'</div><div class="snum">'+x.n+'</div></div></div>').join('');
+  const q=(document.getElementById('desSearch').value||'').toLowerCase();
+  const cat=document.getElementById('desCat').value, s=document.getElementById('desStatus').value;
+  let a=list.filter(d=>{
+    if(cat && d.category!==cat) return false;
+    if(s && (d.status||'ACTIVE')!==s) return false;
+    return !q || JSON.stringify(d).toLowerCase().includes(q);
+  }).slice().reverse();
+  const pg=pageArr(a,'designs',8);
+  const t=document.getElementById('desTable');
+  if(!a.length){ t.innerHTML=emptyBox('No designs yet. Click "Add New Design" to create your first one.'); document.getElementById('desPager').innerHTML=''; return; }
+  t.innerHTML='<table><thead><tr><th>#</th><th>Image</th><th>Title</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    pg.rows.map((d,i)=>{
+      const imgs=parseImages(d.images); const im=d.image||imgs[0];
+      const n=(pg.cur-1)*pg.per+i+1;
+      return '<tr><td class="muted">'+n+'</td><td>'+(im?'<img class="tthumb" src="'+esc(im)+'" loading="lazy">':'<div class="tthumb"></div>')+'</td>'+
+      '<td><div class="ttitle">'+esc(d.name)+'</div><div class="tsub">'+esc(String(d.description||'').slice(0,60))+'</div></td>'+
+      '<td>'+catPill(d.category)+'</td><td>'+statusPill(d.status||'ACTIVE')+'</td>'+
+      '<td><div class="act"><button class="ibtn v" onclick="previewDesign(\''+esc(d.id)+'\')">'+ic('eye')+'</button>'+
+      (can('designs.edit')?'<button class="ibtn e" onclick="openDesignForm(\''+esc(d.id)+'\')">'+ic('pen')+'</button>':'')+
+      (can('designs.delete')?'<button class="ibtn d" onclick="deleteDesign(\''+esc(d.id)+'\')">'+ic('trash')+'</button>':'')+
+      '</div></td></tr>';
+    }).join('')+'</tbody></table>';
+  document.getElementById('desPager').innerHTML=pagerHtml(pg,'designs');
+  if(S.selDesign) previewDesign(S.selDesign,true);
+}
+function previewDesign(id){
+  S.selDesign=id;
+  const d=(cache.designs||[]).find(x=>String(x.id)===String(id));
+  const el=document.getElementById('desPreview'); if(!el||!d) return;
+  const imgs=parseImages(d.images); const im=d.image||imgs[0];
+  el.innerHTML='<div class="card cardpad"><div class="ctitle">Design Preview</div>'+
+    (im?'<img class="pv-img" src="'+esc(im)+'">':'<div class="pv-img"></div>')+
+    '<div class="pv-title"><span>'+esc(d.name)+'</span>'+statusPill(d.status||'ACTIVE')+'</div>'+
+    '<div class="pv-meta">'+
+    '<div class="pv-row">'+ic('layers')+'<span class="k">Category</span><span class="v">'+esc(d.category||'—')+'</span></div>'+
+    (d.designType?'<div class="pv-row">'+ic('tag')+'<span class="k">Design Type</span><span class="v">'+esc(d.designType)+'</span></div>':'')+
+    (d.sizeRange?'<div class="pv-row">'+ic('box')+'<span class="k">Size Range</span><span class="v">'+esc(d.sizeRange)+'</span></div>':'')+
+    (d.material?'<div class="pv-row">'+ic('cube')+'<span class="k">Material</span><span class="v">'+esc(d.material)+'</span></div>':'')+
+    (d.price?'<div class="pv-row">'+ic('money')+'<span class="k">Price</span><span class="v">'+esc(d.price)+'</span></div>':'')+
+    '</div><hr class="hr"><div class="ctitle">Quick Actions</div><div class="qa">'+
+    (can('designs.edit')?'<button class="btn btn-p" onclick="openDesignForm(\''+esc(d.id)+'\')">'+ic('pen')+'Edit Design</button>':'')+
+    (can('designs.create')?'<button class="btn btn-o" onclick="duplicateDesign(\''+esc(d.id)+'\')">'+ic('cube')+'Duplicate</button>':'')+
+    (can('designs.delete')?'<button class="btn btn-danger" onclick="deleteDesign(\''+esc(d.id)+'\')">'+ic('trash')+'Delete</button>':'')+
+    '</div><div class="tips"><b>💡 Design Tips</b><p>Use high-quality images and clear dimensions to get better customer orders.</p></div></div>';
+}
+function openDesignForm(id){
+  const d=id?(cache.designs||[]).find(x=>String(x.id)===String(id)):{};
+  const cats=(cache.categories&&cache.categories.length)?cache.categories.map(c=>c.name):DEFAULT_CATEGORIES;
+  const img=imageUploadWidget(parseImages(d.images));
+  window.__dimg=img.state;
+  openModal(id?'Edit Base Design':'Add New Design', `
+    <label>Design Name *</label><input id="d_name" value="${esc(d.name||'')}">
+    <label>Description</label><textarea id="d_desc">${esc(d.description||'')}</textarea>
+    <div class="row2">
+      <div><label>Category</label><select id="d_cat">${cats.map(c=>'<option '+(d.category===c?'selected':'')+'>'+esc(c)+'</option>').join('')}</select></div>
+      <div><label>Subcategory</label><input id="d_sub" value="${esc(d.subcategory||'')}"></div>
+      <div><label>Design Type</label><input id="d_type" value="${esc(d.designType||'')}" placeholder="e.g. Backlit LED"></div>
+      <div><label>Material</label><input id="d_mat" value="${esc(d.material||'')}" placeholder="e.g. Acrylic + LED"></div>
+      <div><label>Size Range</label><input id="d_size" value="${esc(d.sizeRange||'')}" placeholder="e.g. Custom (Any Size)"></div>
+      <div><label>Price (optional)</label><input id="d_price" value="${esc(d.price||'')}" placeholder="₹ or Get a Quote"></div>
+      <div><label>Status</label><select id="d_status"><option ${(d.status||'ACTIVE')==='ACTIVE'?'selected':''}>ACTIVE</option><option ${d.status==='INACTIVE'?'selected':''}>INACTIVE</option></select></div>
+    </div>
+    ${img.html}`, async()=>{
+    await withSaving(async()=>{
+      const data={name:val('d_name'),description:val('d_desc'),category:val('d_cat'),subcategory:val('d_sub'),
+        designType:val('d_type'),material:val('d_mat'),sizeRange:val('d_size'),price:val('d_price'),
+        status:val('d_status'),images:window.__dimg.images};
+      if(!data.name.trim()) throw new Error('Design name is required.');
+      if(id) await api('designs.edit',{id,...data});
+      else await api('designs.create',data);
+      closeModal(); toast(id?'Design updated':'Design created'); await loadDesigns();
+    });
+  });
+}
+async function duplicateDesign(id){
+  const d=(cache.designs||[]).find(x=>String(x.id)===String(id)); if(!d) return;
+  await withSaving(async()=>{
+    const data={...d}; delete data.id; delete data.createdAt; delete data.updatedAt;
+    data.name=String(d.name||'')+' (Copy)';
+    await api('designs.create',data);
+    toast('Design duplicated'); await loadDesigns();
+  });
+}
+async function deleteDesign(id){
+  if(!await confirmAction('Delete this base design?')) return;
+  try{ await api('designs.delete',{id}); if(S.selDesign===id) S.selDesign=null; toast('Design deleted'); await loadDesigns(); }
+  catch(e){ toast(e.message,'err'); }
+}
+</script>
+<script>
+/* ================= ORDERS + QUOTES ================= */
+BUILDERS.orders = ()=>`
+  <div class="phead"><div><h1>Orders</h1><div class="psub">Real orders from your database.</div></div></div>
+  <div class="tabs">
+    <button class="tab ${S.ordersTab==='orders'?'on':''}" onclick="S.ordersTab='orders';go2('orders')">Orders</button>
+    ${can('quotes.view')?'<button class="tab '+(S.ordersTab==='quotes'?'on':'')+'" onclick="S.ordersTab=\'quotes\';go2(\'orders\')">Quote Requests</button>':''}
+  </div>
+  <div id="ordersBody">${emptyBox('Loading…')}</div>`;
+
+async function loadOrders(){
+  if(S.ordersTab==='quotes') return loadQuotes();
+  if(!can('orders.view')){ document.getElementById('ordersBody').innerHTML=emptyBox('No permission: orders.view'); return; }
+  cache.orders=(await api('orders.list')).orders;
+  buildNav();
+  const body=document.getElementById('ordersBody');
+  body.innerHTML=`
+    <div class="stats" id="ordStats"></div>
+    <div class="toolbar">
+      <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+        <input id="ordSearch" placeholder="Search order / customer / phone"></div>
+      <select id="ordStatus">${'<option value="">All Status</option>'+ORDER_STATUSES.map(s=>'<option>'+s+'</option>').join('')}</select>
+    </div>
+    <div class="card"><div class="tablewrap" id="ordTable"></div><div id="ordPager"></div></div>`;
+  const all=cache.orders;
+  const cnt=s=>all.filter(o=>o.status===s).length;
+  document.getElementById('ordStats').innerHTML=[
+    {l:'Total Orders',n:all.length,i:'orders',c:'b'},
+    {l:'Pending',n:cnt('Pending'),i:'clock',c:'a'},
+    {l:'Delivered',n:cnt('Delivered'),i:'check',c:'g'},
+    {l:'Revenue',n:money(all.filter(o=>o.status!=='Cancelled').reduce((a,o)=>a+Number(o.total||0),0)),i:'money',c:'p'}
+  ].map(x=>'<div class="scard"><div class="sic '+x.c+'">'+ic(x.i)+'</div><div><div class="slabel">'+x.l+'</div><div class="snum">'+x.n+'</div></div></div>').join('');
+  document.getElementById('ordSearch').oninput=debounce(renderOrders,250);
+  document.getElementById('ordStatus').onchange=renderOrders;
+  renderOrders();
+}
+function renderOrders(){
+  const q=(document.getElementById('ordSearch').value||'').toLowerCase();
+  const s=document.getElementById('ordStatus').value;
+  let a=(cache.orders||[]).filter(o=>(!s||o.status===s)&&(!q||JSON.stringify(o).toLowerCase().includes(q))).slice().reverse();
+  const pg=pageArr(a,'orders',10);
+  const t=document.getElementById('ordTable');
+  if(!a.length){ t.innerHTML=emptyBox('No orders match.'); document.getElementById('ordPager').innerHTML=''; return; }
+  t.innerHTML='<table><thead><tr><th>Image</th><th>Order</th><th>Date</th><th>Customer</th><th>Phone</th><th>Products</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    pg.rows.map(o=>'<tr><td>'+(parseImages(o.files)[0]?'<img src="'+esc((function(u){var m=String(u||'').match(/\/d\/([a-zA-Z0-9_-]+)/);return m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w200':u;})(parseImages(o.files)[0]))+'" style="width:50px;height:50px;object-fit:cover;border-radius:8px;cursor:zoom-in" onclick="showImage(\''+String(parseImages(o.files)[0]).replace(/'/g,"\\'")+'\')">':'<div style="width:50px;height:50px;border-radius:8px;background:#e8eef6"></div>')+'</td><td class="ttitle">'+esc(o.id)+'</td><td class="muted">'+fmtDateTime(o.date)+'</td>'+
+      '<td>'+esc(o.name||'')+'</td><td>'+esc(o.mobile||'')+'</td><td>'+esc(o.products||'')+'</td>'+
+      '<td class="ttitle">'+(o.total?money(o.total):'—')+'</td>'+
+      '<td>'+statusPill(o.status)+'</td>'+
+      '<td><div class="act"><button class="ibtn v" onclick="viewOrder(\''+esc(o.id)+'\')">'+ic('eye')+'</button>'+
+      (can('orders.delete')?'<button class="ibtn d" onclick="deleteOrder(\''+esc(o.id)+'\')">'+ic('trash')+'</button>':'')+
+      '</div></td></tr>').join('')+'</tbody></table>';
+  document.getElementById('ordPager').innerHTML=pagerHtml(pg,'orders');
+}
+function viewOrder(id){
+ const o=(cache.orders||[]).find(x=>String(x.id)===String(id)); if(!o) return;
+  const files=parseImages(o.files);
+  const skip=['id'];
+  const rows=Object.keys(o).filter(k=>!skip.includes(k) && String(o[k]??'')!=='').map(k=>
+    '<div class="pv-row"><span class="k" style="text-transform:capitalize">'+esc(k)+'</span><span class="v" style="font-weight:500">'+esc(String(o[k]).slice(0,300))+'</span></div>').join('');
+  openModal('Order '+o.id, '<div class="pv-meta">'+rows+'</div>'+
+    (files.length?'<hr class="hr"><div class="ctitle">Uploaded Files</div><div class="imgpreview">'+files.map(function(u){var m=String(u||'').match(/\/d\/([a-zA-Z0-9_-]+)/);var thumb=m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w400':u;return '<div class="ph" style="cursor:zoom-in" onclick="showImage(\''+String(u).replace(/'/g,"\\'")+'\')"><img src="'+esc(thumb)+'"></div>';}).join('')+'</div>':'')+
+    '<hr class="hr"><label>Update Status</label><select id="o_status">'+ORDER_STATUSES.map(s=>'<option '+(o.status===s?'selected':'')+'>'+s+'</option>').join('')+'</select>',
+    async()=>{
+      await withSaving(async()=>{
+        if(!can('orders.update_status')) throw new Error('Permission denied: orders.update_status');
+        await api('orders.update_status',{id,status:val('o_status')});
+        closeModal(); toast('Order status updated'); await loadOrders();
+      });
+    });
+}
+async function deleteOrder(id){
+  if(!await confirmAction('Delete this order?')) return;
+  try{ await api('orders.delete',{id}); toast('Order deleted'); await loadOrders(); }catch(e){ toast(e.message,'err'); }
+}
+
+async function loadQuotes(){
+  if(!can('quotes.view')){ document.getElementById('ordersBody').innerHTML=emptyBox('No permission: quotes.view'); return; }
+  cache.quotes=(await api('quotes.list')).quotes;
+  const body=document.getElementById('ordersBody');
+  body.innerHTML=`<div class="toolbar">
+      <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+      <input id="qSearch" placeholder="Search quotes..."></div></div>
+    <div class="card"><div class="tablewrap" id="qTable"></div><div id="qPager"></div></div>`;
+  document.getElementById('qSearch').oninput=debounce(renderQuotes,250);
+  renderQuotes();
+}
+function renderQuotes(){
+  const q=(document.getElementById('qSearch').value||'').toLowerCase();
+  const a=(cache.quotes||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
+  const pg=pageArr(a,'quotes',10);
+  const t=document.getElementById('qTable');
+  if(!a.length){ t.innerHTML=emptyBox('No quote requests yet.'); document.getElementById('qPager').innerHTML=''; return; }
+  t.innerHTML='<table><thead><tr><th>Request</th><th>Date</th><th>Customer</th><th>Product</th><th>Size / Qty</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    pg.rows.map(x=>'<tr><td class="ttitle">'+esc(x.id)+'</td><td class="muted">'+fmtDay(x.date)+'</td>'+
+    '<td>'+esc(x.name||'')+'<div class="tsub">'+esc(x.mobile||'')+'</div></td>'+
+    '<td>'+esc(x.product||'')+'</td><td>'+esc(x.size||'—')+' / '+esc(x.quantity||'1')+'</td>'+
+    '<td>'+statusPill(x.status)+'</td>'+
+    '<td><div class="act"><button class="ibtn v" onclick="viewQuote(\''+esc(x.id)+'\')">'+ic('eye')+'</button></div></td></tr>').join('')+
+    '</tbody></table>';
+  document.getElementById('qPager').innerHTML=pagerHtml(pg,'quotes');
+}
+function viewQuote(id){
+  const x=(cache.quotes||[]).find(q=>String(q.id)===String(id)); if(!x) return;
+  const files=parseImages(x.files);
+  openModal('Quote '+x.id, 
+    '<div class="pv-meta">'+Object.keys(x).filter(k=>k!=='id'&&String(x[k]??'')!=='').map(k=>
+      '<div class="pv-row"><span class="k" style="text-transform:capitalize">'+esc(k)+'</span><span class="v" style="font-weight:500">'+esc(String(x[k]).slice(0,300))+'</span></div>').join('')+'</div>'+
+    (files.length?'<hr class="hr"><div class="imgpreview">'+files.map(u=>'<div class="ph"><img src="'+esc(u)+'"></div>').join('')+'</div>':'')+
+    '<hr class="hr"><label>Update Status</label><select id="q_status">'+QUOTE_STATUSES.map(s=>'<option '+(x.status===s?'selected':'')+'>'+s+'</option>').join('')+'</select>',
+    async()=>{
+      await withSaving(async()=>{
+        if(!can('quotes.update_status')) throw new Error('Permission denied: quotes.update_status');
+        await api('quotes.update_status',{id,status:val('q_status')});
+        closeModal(); toast('Quote updated'); await loadQuotes();
+      });
+    });
+}
+
+/* ================= CUSTOMERS ================= */
+BUILDERS.customers = ()=>`
+  <div class="phead"><div><h1>Customers</h1><div class="psub">Aggregated from real orders — no fake records.</div></div></div>
+  <div class="toolbar"><div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+    <input id="custSearch" placeholder="Search customers..."></div></div>
+  <div class="card"><div class="tablewrap" id="custTable">${emptyBox('Loading…')}</div><div id="custPager"></div></div>`;
+
+async function loadCustomers(){
+  if(!can('customers.view')){ document.getElementById('custTable').innerHTML=emptyBox('No permission: customers.view'); return; }
+  cache.customers=(await api('customers.list')).customers;
+  document.getElementById('custSearch').oninput=debounce(renderCustomers,250);
+  renderCustomers();
+}
+function renderCustomers(){
+  const q=(document.getElementById('custSearch').value||'').toLowerCase();
+  const a=(cache.customers||[]).filter(c=>!q||JSON.stringify(c).toLowerCase().includes(q))
+    .sort((a,b)=>(b.total||0)-(a.total||0));
+  const pg=pageArr(a,'customers',10);
+  const t=document.getElementById('custTable');
+  if(!a.length){ t.innerHTML=emptyBox('No customers yet — they appear here when real orders arrive.'); document.getElementById('custPager').innerHTML=''; return; }
+  t.innerHTML='<table><thead><tr><th>Customer</th><th>Mobile</th><th>WhatsApp</th><th>Email</th><th>City</th><th>Orders</th><th>Total Value</th><th>Last Order</th></tr></thead><tbody>'+
+    pg.rows.map(c=>'<tr><td class="ttitle">'+esc(c.name||'—')+'</td><td>'+esc(c.mobile||'')+'</td><td>'+esc(c.whatsapp||'')+'</td>'+
+    '<td>'+esc(c.email||'')+'</td><td>'+esc(c.city||'')+'</td><td>'+c.orders+'</td>'+
+    '<td class="ttitle">'+money(c.total)+'</td><td class="muted">'+fmtDay(c.last)+'</td></tr>').join('')+'</tbody></table>';
+  document.getElementById('custPager').innerHTML=pagerHtml(pg,'customers');
+}
+
+/* ================= REVIEWS ================= */
+BUILDERS.reviews = ()=>`
+  <div class="phead"><div><h1>Reviews & Ratings</h1><div class="psub">Approve, hide or delete real customer reviews.</div></div></div>
+  <div class="card"><div class="tablewrap" id="revTable">${emptyBox('Loading…')}</div></div>`;
+async function loadReviews(){
+  if(!can('reviews.view')){ document.getElementById('revTable').innerHTML=emptyBox('No permission: reviews.view'); return; }
+  cache.reviews=(await api('reviews.list')).reviews;
+  const t=document.getElementById('revTable');
+  const a=(cache.reviews||[]).slice().reverse();
+  if(!a.length){ t.innerHTML=emptyBox('No reviews yet. Approved reviews will show on the website.'); return; }
+  t.innerHTML='<table><thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Review</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    a.map(r=>'<tr><td>'+esc(r.productName||'')+'</td><td>'+esc(r.name||'')+'</td><td>'+stars(r.rating)+'</td>'+
+    '<td style="max-width:280px" class="tsub">'+esc(r.review||'')+'</td><td>'+statusPill(r.status)+'</td>'+
+    '<td><div class="act">'+
+    (can('reviews.moderate')&&r.status!=='APPROVED'?'<button class="ibtn e" title="Approve" onclick="moderateReview(\''+esc(r.id)+'\',\'APPROVED\')">'+ic('check')+'</button>':'')+
+    (can('reviews.moderate')&&r.status!=='HIDDEN'?'<button class="ibtn v" title="Hide" onclick="moderateReview(\''+esc(r.id)+'\',\'HIDDEN\')">'+ic('eye')+'</button>':'')+
+    (can('reviews.delete')?'<button class="ibtn d" onclick="deleteReview(\''+esc(r.id)+'\')">'+ic('trash')+'</button>':'')+
+    '</div></td></tr>').join('')+'</tbody></table>';
+}
+async function moderateReview(id,status){ try{ await api('reviews.moderate',{id,status}); toast('Review '+status.toLowerCase()); await loadReviews(); }catch(e){ toast(e.message,'err'); } }
+async function deleteReview(id){ if(!await confirmAction('Delete this review?')) return; try{ await api('reviews.delete',{id}); toast('Review deleted'); await loadReviews(); }catch(e){ toast(e.message,'err'); } }
+
+/* ================= COMMENTS ================= */
+BUILDERS.comments = ()=>`
+  <div class="phead"><div><h1>Comments</h1><div class="psub">Moderate real comments. Approved comments are visible on the website.</div></div></div>
+  <div class="card"><div class="tablewrap" id="comTable">${emptyBox('Loading…')}</div></div>`;
+async function loadComments(){
+  if(!can('comments.view')){ document.getElementById('comTable').innerHTML=emptyBox('No permission: comments.view'); return; }
+  cache.comments=(await api('comments.list')).comments;
+  const t=document.getElementById('comTable');
+  const a=(cache.comments||[]).slice().reverse();
+  if(!a.length){ t.innerHTML=emptyBox('No comments yet.'); return; }
+  t.innerHTML='<table><thead><tr><th>Product</th><th>Name</th><th>Comment</th><th>Reply</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    a.map(c=>'<tr><td>'+esc(c.productName||'')+'</td><td>'+esc(c.name||'')+'</td>'+
+    '<td style="max-width:240px" class="tsub">'+esc(c.comment||'')+'</td>'+
+    '<td style="max-width:200px" class="tsub">'+esc(c.reply||'—')+'</td><td>'+statusPill(c.status)+'</td>'+
+    '<td><div class="act">'+
+    (can('comments.moderate')&&c.status!=='APPROVED'?'<button class="ibtn e" title="Approve" onclick="moderateComment(\''+esc(c.id)+'\',\'APPROVED\')">'+ic('check')+'</button>':'')+
+    (can('comments.moderate')&&c.status!=='HIDDEN'?'<button class="ibtn v" title="Hide" onclick="moderateComment(\''+esc(c.id)+'\',\'HIDDEN\')">'+ic('eye')+'</button>':'')+
+    (can('comments.moderate')?'<button class="ibtn e" title="Reply" onclick="replyComment(\''+esc(c.id)+'\')">'+ic('comment')+'</button>':'')+
+    (can('comments.delete')?'<button class="ibtn d" onclick="deleteComment(\''+esc(c.id)+'\')">'+ic('trash')+'</button>':'')+
+    '</div></td></tr>').join('')+'</tbody></table>';
+}
+async function moderateComment(id,status){ try{ await api('comments.moderate',{id,status}); toast('Comment '+status.toLowerCase()); await loadComments(); }catch(e){ toast(e.message,'err'); } }
+function replyComment(id){
+  const c=(cache.comments||[]).find(x=>String(x.id)===String(id));
+  openModal('Reply to comment', '<label>Reply</label><textarea id="c_reply">'+esc(c?.reply||'')+'</textarea>', async()=>{
+    await withSaving(async()=>{ await api('comments.moderate',{id,reply:val('c_reply'),status:'APPROVED'}); closeModal(); toast('Reply saved'); await loadComments(); });
+  });
+}
+async function deleteComment(id){ if(!await confirmAction('Delete this comment?')) return; try{ await api('comments.delete',{id}); toast('Comment deleted'); await loadComments(); }catch(e){ toast(e.message,'err'); } }
+
+/* ================= ANALYTICS ================= */
+BUILDERS.analytics = ()=>`
+  <div class="phead"><div><h1>Analytics</h1><div class="psub">Real tracked data only. Empty means zero — nothing is invented.</div></div></div>
+  <div class="stats" id="anaStats"></div>
+  <div class="split">
+    <div class="card chartbox"><div class="ctitle">Visits — last 14 days</div><canvas class="chart" id="visitChart"></canvas><div id="chartEmpty"></div></div>
+    <div class="card cardpad"><div class="ctitle">Orders by Status</div><div id="anaStatus"><span class="muted">Loading…</span></div></div>
+  </div>`;
+async function loadAnalytics(){
+  if(!can('analytics.view')){ document.getElementById('anaStats').innerHTML=emptyBox('No permission: analytics.view'); return; }
+  const a=await api('analytics.summary');
+  cache.analytics=a;
+  document.getElementById('anaStats').innerHTML=[
+    {l:'Total Revenue',n:money(a.revenue),i:'money',c:'g'},
+    {l:"Today's Revenue",n:money(a.todayRevenue),i:'clock',c:'b'},
+    {l:'Units Sold',n:a.units,i:'box',c:'p'},
+    {l:'Visits (14d)',n:a.visits,i:'chart',c:'c'}
+  ].map(x=>'<div class="scard"><div class="sic '+x.c+'">'+ic(x.i)+'</div><div><div class="slabel">'+x.l+'</div><div class="snum">'+x.n+'</div></div></div>').join('')+
+  '<div class="scard"><div class="sic t">'+ic('users')+'</div><div><div class="slabel">Customers</div><div class="snum">'+a.customers+'</div></div></div>'+
+  '<div class="scard"><div class="sic a">'+ic('star')+'</div><div><div class="slabel">Avg Rating ('+a.reviewsApproved+' approved)</div><div class="snum">'+(a.avgRating?a.avgRating.toFixed(1)+'★':'—')+'</div></div></div>'+
+  '<div class="scard"><div class="sic b">'+ic('comment')+'</div><div><div class="slabel">Pending Reviews</div><div class="snum">'+a.reviewsPending+'</div></div></div>'+
+  '<div class="scard"><div class="sic r">'+ic('filter')+'</div><div><div class="slabel">New Quotes</div><div class="snum">'+a.quotesNew+'</div></div></div>';
+  const bs=a.byStatus||{}, max=Math.max(1,...Object.values(bs));
+  document.getElementById('anaStatus').innerHTML=Object.keys(bs).length?
+    ORDER_STATUSES.filter(s=>bs[s]).map(s=>'<div class="barrow"><span class="k">'+s+'</span><div class="bartrack"><div class="barfill" style="width:'+Math.round(bs[s]/max*100)+'%"></div></div><span class="v">'+bs[s]+'</span></div>').join('')
+    :'<span class="muted">No orders yet.</span>';
+  drawVisitChart(a.stats||[]);
+}
+function drawVisitChart(stats){
+  const cv=document.getElementById('visitChart');
+  const total=(stats||[]).reduce((a,s)=>a+Number(s.visits||0),0);
+  if(!stats.length || !total){ cv.style.display='none'; document.getElementById('chartEmpty').innerHTML='<div class="empty">'+ic('chart')+'<div>No visit data yet. Add the tracking snippet to your website (see Settings).</div></div>'; return; }
+  document.getElementById('chartEmpty').innerHTML='';
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth, H=220;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  const max=Math.max(...stats.map(s=>Number(s.visits||0)),1);
+  const pad=30, bw=(W-pad-10)/stats.length;
+  ctx.strokeStyle='#e6ecf4'; ctx.fillStyle='#7185a1'; ctx.font='10px Inter';
+  for(let i=0;i<=4;i++){ const y=10+(H-40)*i/4; ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-5,y); ctx.stroke(); ctx.fillText(String(Math.round(max*(4-i)/4)),4,y+3); }
+  stats.forEach((s,i)=>{
+    const v=Number(s.visits||0), h=(H-50)*(v/max);
+    const x=pad+i*bw+bw*0.15, y=H-30-h;
+    ctx.fillStyle='#2563eb';
+    ctx.beginPath(); ctx.roundRect(x,y,bw*0.7,h||2,4); ctx.fill();
+    ctx.fillStyle='#7185a1';
+    ctx.fillText(String(s.date||'').slice(5),x,H-14);
+  });
+}
+
+/* ================= NOTIFICATIONS ================= */
+BUILDERS.notifications = ()=>`
+  <div class="phead"><div><h1>Notifications</h1><div class="psub">Real events: new orders, quotes, reviews and comments.</div></div>
+    <button class="btn btn-o" onclick="markAllRead()">Mark all read</button></div>
+  <div class="card" id="notifList">${emptyBox('Loading…')}</div>`;
+async function loadNotificationsPage(){
+  if(!can('notifications.view')){ document.getElementById('notifList').innerHTML=emptyBox('No permission: notifications.view'); return; }
+  const r=await api('notifications.list');
+  cache.notifications=r.notifications;
+  renderNotifList();
+  refreshBell(true);
+}
+function notifMeta(n){
+  const rt=(n.refType||n.type||'').toLowerCase();
+  if(rt.includes('order')) return {cls:'order',ic:IC.orders,label:'New order'};
+  if(rt.includes('quote')) return {cls:'quote',ic:IC.money,label:'New quote request'};
+  if(rt.includes('review')||rt.includes('rating')) return {cls:'review',ic:IC.star,label:'New rating'};
+  if(rt.includes('comment')) return {cls:'comment',ic:IC.comment,label:'New comment'};
+  if(rt.includes('subscribe')||rt.includes('customer')) return {cls:'default',ic:IC.users,label:'New subscriber'};
+  return {cls:'default',ic:IC.bell,label:'Update'};
+}
+function notifRow(n,onclick){
+  const m=notifMeta(n), unread=String(n.read)!=='1';
+  return '<button class="dditem'+(unread?' unread':'')+'" style="cursor:pointer" onclick="'+onclick+'">'+
+    '<span class="nic '+m.cls+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+m.ic+'</svg></span>'+
+    '<div style="flex:1;min-width:0"><div class="ntitle">'+esc(n.title)+'</div><div class="ntime">'+m.label+' • '+fmtDate(n.createdAt)+'</div></div>'+
+    (unread?'<span class="unread-dot"></span>':'')+
+    '</button>';
+}
+function renderNotifList(){
+  const el=document.getElementById('notifList');
+  const a=cache.notifications||[];
+  if(!a.length){ el.innerHTML=emptyBox('No notifications yet.'); return; }
+  el.innerHTML=a.map(n=>notifRow(n,"openNotif('"+esc(n.id)+"','"+esc(n.refType||'')+"')")).join('');
+}
+async function openNotif(id,refType){
+  try{ await api('notifications.mark_read',{id}); }catch(e){}
+  const map={order:'orders',quote:'orders',review:'reviews',comment:'comments'};
+  if(refType==='quote') S.ordersTab='quotes';
+  if(map[refType]) go2(map[refType]); else loadNotificationsPage();
+  refreshBell(true);
+}
+async function markAllRead(){ try{ await api('notifications.mark_all_read'); toast('All notifications marked read'); await loadNotificationsPage(); }catch(e){ toast(e.message,'err'); } }
+async function refreshBell(skipLoad){
+  if(!me || !can('notifications.view')) return;
+  try{
+    const u=await api('notifications.unread_count');
+    S.unread=u.unread;
+    const b=document.getElementById('bellBadge');
+    b.textContent=u.unread>99?'99+':u.unread; b.style.display=u.unread?'grid':'none';
+    if(skipLoad){ const r=await api('notifications.list'); cache.notifications=r.notifications; }
+    const menu=document.getElementById('bellMenu');
+    const a=(cache.notifications||[]).slice(0,8);
+    menu.innerHTML='<div class="ddhead">Notifications <button onclick="markAllRead();event.stopPropagation()">Mark all read</button></div>'+
+      '<div style="max-height:62vh;overflow-y:auto">'+
+      (a.length?a.map(n=>notifRow(n,"openNotif('"+esc(n.id)+"','"+esc(n.refType||'')+"');document.getElementById('bellMenu').classList.remove('on')")).join('')
+      :'<div class="dditem muted">No notifications yet.</div>')+'</div>';
+  }catch(e){}
+}
+
+/* ================= ADMINS ================= */
+BUILDERS.admins = ()=>`
+  <div class="phead"><div><h1>Admin Management</h1><div class="psub">Super Admin is protected. Permissions are enforced on the backend.</div></div>
+    ${can('admins.create')?'<button class="btn btn-p" id="addAdminBtn">'+ic('plus')+'Create Sub-Admin</button>':''}</div>
+  <div class="card"><div class="tablewrap" id="admTable">${emptyBox('Loading…')}</div></div>`;
+async function loadAdmins(){
+  if(!can('admins.view')){ document.getElementById('admTable').innerHTML=emptyBox('No permission: admins.view'); return; }
+  cache.admins=(await api('admins.list')).admins;
+  const b=document.getElementById('addAdminBtn'); if(b) b.onclick=()=>openAdminForm(null);
+  const t=document.getElementById('admTable');
+  t.innerHTML='<table><thead><tr><th>Name</th><th>Login</th><th>Role</th><th>Status</th><th>Permissions</th><th>Action</th></tr></thead><tbody>'+
+    cache.admins.map(a=>'<tr><td class="ttitle">'+esc(a.name)+'</td><td>'+esc(a.login)+'</td><td>'+catPill(a.role)+'</td>'+
+    '<td>'+statusPill(a.status)+'</td><td class="tsub" style="max-width:260px">'+esc((a.permissions||[]).join(', '))+'</td>'+
+    '<td>'+(a.role==='SUPER_ADMIN'?'<span class="muted">Protected</span>':
+      '<div class="act">'+(can('admins.edit')?'<button class="ibtn e" onclick="openAdminForm(\''+esc(a.id)+'\')">'+ic('pen')+'</button>':'')+
+      (can('admins.delete')?'<button class="ibtn d" onclick="deleteAdmin(\''+esc(a.id)+'\')">'+ic('trash')+'</button>':'')+'</div>')+'</td></tr>').join('')+
+    '</tbody></table>';
+}
+function permChecks(selected){
+  return '<div class="checks">'+ALL_PERMS.map(x=>'<label class="check"><input type="checkbox" value="'+x+'" '+((selected||[]).includes(x)?'checked':'')+'> '+x+'</label>').join('')+'</div>';
+}
+function openAdminForm(id){
+  const a=id?(cache.admins||[]).find(x=>String(x.id)===String(id)):null;
+  openModal(id?'Edit Sub-Admin':'Create Sub-Admin', `
+    <label>Name</label><input id="a_name" value="${esc(a?.name||'')}">
+    ${id?'':'<label>Login (email/username)</label><input id="a_login">'}
+    <label>${id?'New password (leave blank to keep current)':'Temporary password (min 10 chars)'}</label><input id="a_pw" type="password">
+    <label>Status</label><select id="a_status"><option ${(!a||a.status==='ACTIVE')?'selected':''}>ACTIVE</option><option ${a?.status==='INACTIVE'?'selected':''}>INACTIVE</option></select>
+    <label>Permissions</label>${permChecks(a?.permissions)}`, async()=>{
+    await withSaving(async()=>{
+      const permissions=[...document.querySelectorAll('#modalBody input[type=checkbox]:checked')].map(x=>x.value);
+      if(id){
+        await api('admins.edit',{id,name:val('a_name'),status:val('a_status'),permissions});
+        if(val('a_pw')) await api('admins.password_reset',{id,password:val('a_pw')});
+      } else {
+        await api('admins.create',{name:val('a_name'),login:val('a_login'),password:val('a_pw'),permissions});
+      }
+      closeModal(); toast(id?'Admin updated':'Sub-admin created'); await loadAdmins();
+    });
+  });
+}
+async function deleteAdmin(id){
+  if(!await confirmAction('Delete this sub-admin? Their sessions will be invalidated.')) return;
+  try{ await api('admins.delete',{id}); toast('Sub-admin deleted'); await loadAdmins(); }catch(e){ toast(e.message,'err'); }
+}
+
+/* ================= LOGS ================= */
+BUILDERS.logs = ()=>`
+  <div class="phead"><div><h1>Activity Logs</h1><div class="psub">Every important admin action is recorded.</div></div></div>
+  <div class="card"><div class="tablewrap" id="logTable">${emptyBox('Loading…')}</div></div>`;
+async function loadLogs(){
+  if(!can('logs.view')){ document.getElementById('logTable').innerHTML=emptyBox('No permission: logs.view'); return; }
+  cache.logs=(await api('logs.list')).logs;
+  const t=document.getElementById('logTable');
+  const a=(cache.logs||[]).slice().reverse();
+  if(!a.length){ t.innerHTML=emptyBox('No activity yet.'); return; }
+  t.innerHTML='<table><thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th></tr></thead><tbody>'+
+    a.map(l=>'<tr><td class="muted">'+fmtDate(l.createdAt)+'</td><td>'+esc(l.adminLogin)+'</td>'+
+    '<td>'+catPill(l.action)+'</td><td>'+esc(l.targetType)+' '+esc(l.targetId)+'</td>'+
+    '<td class="tsub" style="max-width:280px">'+esc(String(l.details||'').slice(0,120))+'</td></tr>').join('')+'</tbody></table>';
+}
+
+/* ================= SETTINGS ================= */
+BUILDERS.settings = ()=>`
+  <div class="phead"><div><h1>Settings</h1><div class="psub">Backend configuration and website integration.</div></div></div>
+  <div class="card cardpad" id="setBody">${emptyBox('Loading…')}</div>`;
+async function loadSettings(){
+  const el=document.getElementById('setBody');
+  if(!can('settings.view')){ el.innerHTML=emptyBox('No permission: settings.view'); return; }
+  try{
+    const s=await api('settings.get');
+    el.innerHTML='<p>Admin backend configuration is kept server-side. No password or secret is stored in this page.</p>'+
+      '<div class="pv-meta"><div class="pv-row"><span class="k">Service</span><span class="v">'+esc(s.app?.NAME||'')+' v'+esc(s.app?.VERSION||'')+'</span></div>'+
+      '<div class="pv-row"><span class="k">Database ID</span><span class="v" style="font-size:12px">'+esc(s.databaseId||'')+'</span></div></div>'+
+      '<hr class="hr"><div class="ctitle">Website integration (optional)</div>'+
+      '<p class="muted" style="font-size:13px">To receive orders/quotes directly into this panel with notifications, set your website theme\'s <b>ORDER_FORM_URL</b> to this same Web App URL. The backend accepts <code>orders.create_public</code> and <code>quotes.create_public</code>. '+
+      'For visit analytics, add a small fetch on your site calling action <code>track</code> with event <code>visit</code> / <code>product_view</code>.</p>';
+  }catch(e){ el.innerHTML=emptyBox(e.message); }
+}
+
+/* ================= TOP BAR / BELL / BOOT ================= */
+document.getElementById('hamb').onclick=()=>{
+  document.body.classList.toggle('sopen');
+  const bd=document.getElementById('sidebarBackdrop');
+  if(bd) bd.classList.toggle('show', document.body.classList.contains('sopen'));
+};
+function closeSidebar(){
+  document.body.classList.remove('sopen');
+  const bd=document.getElementById('sidebarBackdrop');
+  if(bd) bd.classList.remove('show');
+}
+const _sbClose=document.getElementById('sidebarClose');
+if(_sbClose) _sbClose.onclick=closeSidebar;
+const _sbBackdrop=document.getElementById('sidebarBackdrop');
+if(_sbBackdrop) _sbBackdrop.onclick=closeSidebar;
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape' && document.body.classList.contains('sopen')) closeSidebar();
+});
+document.addEventListener('click',(e)=>{
+  const navBtn=e.target.closest('[data-nav]');
+  if(navBtn && window.innerWidth<=900) closeSidebar();
+});
+document.getElementById('bellBtn').onclick=(e)=>{ e.stopPropagation(); document.getElementById('profMenu').classList.remove('on'); document.getElementById('bellMenu').classList.toggle('on'); };
+document.getElementById('profBtn').onclick=(e)=>{ e.stopPropagation(); document.getElementById('bellMenu').classList.remove('on'); document.getElementById('profMenu').classList.toggle('on'); };
+document.addEventListener('click',()=>{ document.getElementById('bellMenu').classList.remove('on'); document.getElementById('profMenu').classList.remove('on'); });
+document.getElementById('topSearch').addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  const q=e.target.value.trim(); if(!q) return;
+  if(can('products.view')){ go2('products'); setTimeout(()=>{ const el=document.getElementById('prodSearch'); if(el){ el.value=q; renderProducts(); } },400); }
+});
+document.getElementById('logout').onclick=async()=>{ try{ await api('auth.logout'); }catch(e){} sessionStorage.removeItem('sp_admin_session'); location.reload(); };
+
+function applyBrand(){
+  document.getElementById('lmarkImg').src=BRAND_LOGO;
+  document.getElementById('lbrand').textContent=BRAND.name;
+  document.getElementById('bmarkImg').src=BRAND_LOGO;
+  document.getElementById('bname').textContent=BRAND.name;
+}
+
+async function boot(){
+  if(!sessionToken) return;
+  try{
+    const r=await api('auth.me');
+    me=r.admin;
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('who') && (document.getElementById('who').textContent=me.name);
+    document.getElementById('pname').textContent=me.name;
+    document.getElementById('prole').textContent=me.role;
+    document.getElementById('pav').textContent=(me.name||'A')[0].toUpperCase();
+    applyBrand();
+    buildNav();
+    go2('dashboard');
+    refreshBell(true);
+    setInterval(refreshBell, 60000);
+  }catch(e){ sessionStorage.removeItem('sp_admin_session'); }
+}
+
+document.getElementById('loginForm').onsubmit=async e=>{
+  e.preventDefault();
+  const err=document.getElementById('loginErr'), btn=document.getElementById('loginBtn');
+  err.textContent=''; btn.disabled=true; btn.textContent='Logging in...';
+  try{
+    const r=await api('auth.login',{login:document.getElementById('loginId').value,password:document.getElementById('loginPw').value});
+    sessionToken=r.token;
+    sessionStorage.setItem('sp_admin_session',sessionToken);
+    await boot();
+  }catch(e2){ err.textContent=e2.message; }
+  finally{ btn.disabled=false; btn.textContent='Log in'; }
+};
+
+applyBrand();
+boot();
+function showImage(url){
+  if(!url) return;
+  var m=String(url||'').match(/\/d\/([a-zA-Z0-9_-]+)/);
+  var big=m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1200':url;
+  var div=document.createElement('div');
+  div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+  div.innerHTML='<img src="'+big+'" style="max-width:90vw;max-height:90vh;border-radius:12px;object-fit:contain">';
+  div.onclick=function(){div.remove()};
+  document.body.appendChild(div);
+}
+</script>
+<script>
+/* =====================================================================
+   PERFORMANCE + RELIABILITY LAYER (loaded after the panel code)
+   - stale-while-revalidate cache: pages open instantly, data refreshes in background
+   - parallel requests, no refetch on pagination / filters
+   - product <-> category / subcategory linked to the Categories manager
+   - category rename / move keeps products in sync (website follows automatically)
+   - dashboard / products buttons always find their record
+   - customer image viewer: small first, zoom, back button
+   ===================================================================== */
+(function(){
+'use strict';
+const sid = v => String(v==null ? '' : v);
+const findBy = (list,id) => (list||[]).find(x => sid(x.id)===sid(id));
+const isOff = c => String(c.status||'ACTIVE').toUpperCase()==='INACTIVE';
+const bySort = (a,b) => (Number(a.sort)||0)-(Number(b.sort)||0) || String(a.name).localeCompare(String(b.name));
+const $id = id => document.getElementById(id);
+
+/* ---------- session cache (cleared on login / logout) ---------- */
+const SWR = 'sp_swr:';
+function swrGet(k){ try{ const v=sessionStorage.getItem(SWR+k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function swrSet(k,d){ try{ sessionStorage.setItem(SWR+k,JSON.stringify(d)); }catch(e){ try{ sessionStorage.removeItem(SWR+k); }catch(_){} } }
+function swrClear(){ try{ Object.keys(sessionStorage).filter(k=>k.indexOf(SWR)===0).forEach(k=>sessionStorage.removeItem(k)); }catch(e){} }
+window.swrGet=swrGet; window.swrSet=swrSet;
+const lf=$id('loginForm'); if(lf) lf.addEventListener('submit',swrClear,true);
+const lo=$id('logout'); if(lo) lo.onclick=async()=>{ try{ await api('auth.logout'); }catch(e){} swrClear(); sessionStorage.removeItem('sp_admin_session'); location.reload(); };
+
+/* ---------- api: timeout + one quiet retry for read-only calls ---------- */
+async function apiOnce(action,payload,timeout){
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),timeout||60000);
+  try{
+    const r=await fetch(ADMIN_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,payload}),signal:ctrl.signal});
+    const text=await r.text(); let j;
+    try{ j=JSON.parse(text); }catch(e){ throw new Error('Unexpected server response.'); }
+    if(!j.ok){ const er=new Error(j.error||'Request failed'); er.fatal=true; throw er; }
+    return j;
+  }catch(e){
+    if(e && e.name==='AbortError') throw new Error('Server is taking too long. Please try again.');
+    throw e;
+  }finally{ clearTimeout(to); }
+}
+window.api=async function api(action,payload={}){
+  const readOnly=/\.(list|list_public|summary|unread_count)$/.test(action);
+  for(let i=0;;i++){
+    try{ return await apiOnce(action,payload); }
+    catch(e){ if(e.fatal || !readOnly || i>=1) throw e; await new Promise(r=>setTimeout(r,700)); }
+  }
+};
+
+/* ---------- modal helpers ---------- */
+const _openModal=window.openModal;
+window.openModal=function(title,body,save){
+  _openModal(title,body,save);
+  const s=$id('modalSave'), c=$id('modalCancel');
+  s.style.display=''; s.disabled=false; c.textContent='Cancel'; c.onclick=closeModal;
+};
+function openInfoModal(title,html){
+  window.openModal(title,html,function(){});
+  $id('modalSave').style.display='none'; $id('modalCancel').textContent='Close';
+}
+
+/* ---------- pagination: no reload, no lost clicks ---------- */
+const PAGERS={ products:()=>renderProducts(), orders:()=>renderOrders(), designs:()=>renderDesigns(), quotes:()=>renderQuotes(), customers:()=>renderCustomers() };
+window.setPage=function(key,p){ S.page[key]=p; (PAGERS[key]||rerender)(); const c=$id('content'); if(c&&c.scrollTo) c.scrollTo({top:0}); };
+
+/* ---------- notification polling only while the tab is visible ---------- */
+const _rb=window.refreshBell;
+window.refreshBell=function(a){ if(document.hidden && a!==true) return Promise.resolve(); return _rb(a); };
+
+/* ---------- image upload: shrink photos before sending (much faster) ---------- */
+function readAsDataURL(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f); }); }
+async function shrink(file){
+  const raw=await readAsDataURL(file);
+  if(!/^image\/(jpeg|png|webp)$/i.test(file.type)) return {data:raw,name:file.name};
+  try{
+    let bmp;
+    try{ bmp=await createImageBitmap(file,{imageOrientation:'from-image'}); }
+    catch(e){ bmp=await new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=raw; }); }
+    const w0=bmp.width||bmp.naturalWidth, h0=bmp.height||bmp.naturalHeight, MAX=1600;
+    const k=Math.min(1,MAX/Math.max(w0,h0));
+    if(k===1 && file.size<350*1024) return {data:raw,name:file.name};
+    const cv=document.createElement('canvas'); cv.width=Math.round(w0*k); cv.height=Math.round(h0*k);
+    const cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); cx.drawImage(bmp,0,0,cv.width,cv.height);
+    const out=cv.toDataURL('image/jpeg',0.84);
+    if(out.length<raw.length) return {data:out,name:file.name.replace(/\.[^.]+$/,'')+'.jpg'};
+  }catch(e){}
+  return {data:raw,name:file.name};
+}
+window.wireImageWidget=function(id,state){
+  const drop=$id(id+'_drop'); if(!drop) return;
+  const file=$id(id+'_file'), preview=$id(id+'_preview'), hint=$id(id+'_hint');
+  function render(){
+    preview.innerHTML=state.images.map((u,i)=>'<div class="ph"><img src="'+esc(u)+'">'+(i===0?'<span style="position:absolute;bottom:3px;left:3px;background:#2563eb;color:#fff;font-size:9px;padding:1px 6px;border-radius:6px">MAIN</span>':'')+'<button type="button" class="rm" data-i="'+i+'">×</button></div>').join('');
+    preview.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{ state.images.splice(+b.dataset.i,1); render(); });
+  }
+  render();
+  drop.onclick=()=>file.click();
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag');};
+  drop.ondragleave=()=>drop.classList.remove('drag');
+  drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');handle(e.dataTransfer.files);};
+  file.onchange=()=>handle(file.files);
+  async function handle(fl){
+    const files=Array.from(fl||[]); if(!files.length) return;
+    let n=0;
+    for(const f of files){
+      n++; hint.textContent='Uploading photo '+n+' of '+files.length+'…';
+      try{
+        const s=await shrink(f);
+        const resp=await api('media.upload',{data:s.data,filename:s.name});
+        state.images.push(resp.url); render();
+      }catch(e){ hint.textContent='Upload failed: '+e.message; file.value=''; return; }
+    }
+    hint.textContent=''; file.value='';
+  }
+};
+
+/* =====================================================================
+   DASHBOARD
+   ===================================================================== */
+window.loadDashboard=async function(){
+  const st={ a:swrGet('analytics.summary'), orders:(swrGet('orders.list')||{}).orders||null, products:(swrGet('products.list')||{}).products||null };
+  if(st.orders) cache.orders=st.orders;
+  const alive=()=>S.sec==='dashboard' && $id('dashStats');
+  function paintStats(){
+    if(!alive()) return;
+    let a=st.a||{};
+    if(!can('analytics.view')){
+      const o=st.orders||[], p=st.products||[];
+      a={productsTotal:st.products?p.length:undefined, ordersTotal:st.orders?o.length:undefined, byStatus:{}, revenue:st.orders?0:undefined};
+      o.forEach(x=>{ a.byStatus[x.status]=(a.byStatus[x.status]||0)+1; if(x.status!=='Cancelled') a.revenue+=Number(x.total||0); });
+    }
+    const pend=(a.byStatus&&a.byStatus.Pending)||0;
+    const cards=[
+      {l:'Total Orders',n:a.ordersTotal??'—',i:'orders',c:'b'},
+      {l:'Pending Orders',n:(a.byStatus||st.orders)?pend:'—',i:'clock',c:'a'},
+      {l:'Total Products',n:a.productsTotal??'—',i:'box',c:'p'},
+      {l:'Revenue',n:(a.revenue!==undefined)?money(a.revenue):'—',i:'money',c:'g'}];
+    $id('dashStats').innerHTML=cards.map(x=>'<div class="scard"><div class="sic '+x.c+'">'+ic(x.i)+'</div><div><div class="slabel">'+x.l+'</div><div class="snum">'+x.n+'</div></div></div>').join('');
+    const bs=a.byStatus||{}, max=Math.max(1,...Object.values(bs)), el=$id('dashStatus');
+    if(el) el.innerHTML=Object.keys(bs).length?ORDER_STATUSES.filter(s=>bs[s]).map(s=>'<div class="barrow"><span class="k">'+s+'</span><div class="bartrack"><div class="barfill" style="width:'+Math.round(bs[s]/max*100)+'%"></div></div><span class="v">'+bs[s]+'</span></div>').join(''):(st.orders||st.a?'<span class="muted">No orders yet.</span>':'<span class="muted">Loading…</span>');
+  }
+  function paintOrders(){
+    const od=$id('dashOrders'); if(!alive()||!od) return;
+    if(!can('orders.view')){ od.innerHTML=emptyBox('No permission to view orders.'); return; }
+    if(!st.orders) return;
+    const rows=st.orders.slice(-8).reverse();
+    od.innerHTML=rows.length?'<div class="ordcards">'+rows.map(o=>{
+      const files=parseImages(o.files), addr=addrLine(o), id=esc(sid(o.id));
+      return '<div class="ordcard"><div class="ordcard-top"><div><div class="ordcard-id">'+esc(o.id)+'</div><div class="ordcard-date">'+fmtDateTime(o.date)+'</div></div>'+statusPill(o.status)+'</div>'
+        +'<div class="ordcard-body"><div class="ordcard-info"><div class="nm">'+esc(o.name||'—')+'</div>'
+        +'<div class="muted2">'+esc(o.mobile||'')+(o.whatsapp&&o.whatsapp!==o.mobile?' · WA '+esc(o.whatsapp):'')+'</div>'
+        +'<div class="muted2">'+esc(o.products||'')+(o.total?' · '+money(o.total):'')+'</div>'
+        +(addr?'<div class="ordcard-addr">'+ic('pin')+'<span>'+esc(addr)+'</span></div>':'<div class="ordcard-addr muted2">No address on this order</div>')+'</div>'
+        +'<div class="ordcard-imgs">'+(files.length?files.slice(0,3).map(u=>'<img data-act="vieworder" data-id="'+id+'" src="'+esc(driveThumb(u,'w200'))+'" onerror="imgErr(this)">').join(''):'<div class="ordcard-noimg">'+ic('image')+'</div>')+'</div></div>'
+        +'<div class="ordcard-foot"><button type="button" class="ibtn v" data-act="vieworder" data-id="'+id+'" style="width:auto;padding:0 12px;gap:6px;display:inline-flex;align-items:center;font-size:12.5px;font-weight:600">'+ic('eye')+'Full details</button></div></div>';
+    }).join('')+'</div>':emptyBox('No orders yet.');
+  }
+  paintStats(); paintOrders();
+  const jobs=[];
+  if(can('analytics.view')) jobs.push(api('analytics.summary').then(r=>{ st.a=r; swrSet('analytics.summary',r); paintStats(); }).catch(()=>{}));
+  if(can('orders.view')) jobs.push(api('orders.list').then(r=>{ st.orders=r.orders; cache.orders=r.orders; swrSet('orders.list',r); paintStats(); paintOrders(); }).catch(e=>{ if(!st.orders && alive() && $id('dashOrders')) $id('dashOrders').innerHTML=emptyBox(e.message); }));
+  if(!can('analytics.view') && can('products.view')) jobs.push(api('products.list').then(r=>{ st.products=r.products; swrSet('products.list',r); paintStats(); }).catch(()=>{}));
+  await Promise.all(jobs);
+  refreshBell();
+};
+/* viewOrder: works from the dashboard too (loads orders itself if needed) */
+const _viewOrder=window.viewOrder;
+window.viewOrder=async function(id){
+  if(!findBy(cache.orders,id)){
+    try{ const r=await api('orders.list'); cache.orders=r.orders; swrSet('orders.list',r); }catch(e){ toast(e.message,'err'); return; }
+  }
+  if(!findBy(cache.orders,id)){ toast('Order not found','err'); return; }
+  _viewOrder(id);
+};
+
+/* =====================================================================
+   ORDERS
+   ===================================================================== */
+window.loadOrders=async function(){
+  if(S.ordersTab==='quotes') return loadQuotes();
+  const body=$id('ordersBody');
+  if(!can('orders.view')){ body.innerHTML=emptyBox('No permission: orders.view'); return; }
+  body.innerHTML='<div class="stats" id="ordStats"></div><div class="toolbar"><div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input id="ordSearch" placeholder="Search order / customer / phone"></div><select id="ordStatus"><option value="">All Status</option>'+ORDER_STATUSES.map(s=>'<option>'+s+'</option>').join('')+'</select></div><div class="card"><div class="tablewrap" id="ordTable">'+emptyBox('Loading…')+'</div><div id="ordPager"></div></div>';
+  $id('ordSearch').oninput=debounce(()=>{ S.page.orders=1; renderOrders(); },250);
+  $id('ordStatus').onchange=()=>{ S.page.orders=1; renderOrders(); };
+  function paint(){
+    if(S.sec!=='orders' || S.ordersTab!=='orders' || !$id('ordStats')) return;
+    const all=cache.orders||[], cnt=s=>all.filter(o=>o.status===s).length;
+    $id('ordStats').innerHTML=[
+      {l:'Total Orders',n:all.length,i:'orders',c:'b'},{l:'Pending',n:cnt('Pending'),i:'clock',c:'a'},{l:'Delivered',n:cnt('Delivered'),i:'check',c:'g'},
+      {l:'Revenue',n:money(all.filter(o=>o.status!=='Cancelled').reduce((a,o)=>a+Number(o.total||0),0)),i:'money',c:'p'}
+    ].map(x=>'<div class="scard"><div class="sic '+x.c+'">'+ic(x.i)+'</div><div><div class="slabel">'+x.l+'</div><div class="snum">'+x.n+'</div></div></div>').join('');
+    renderOrders();
+  }
+  const c0=swrGet('orders.list'); if(c0){ cache.orders=c0.orders; paint(); }
+  const r=await api('orders.list'); swrSet('orders.list',r); cache.orders=r.orders; paint(); buildNav();
+};
+
+/* =====================================================================
+   PRODUCTS
+   ===================================================================== */
+const catList = () => (cache.categories||[]).filter(c=>!isOff(c));
+const catMains = () => catList().filter(c=>!c.parentId).sort(bySort);
+const subsOfName = name => { const m=catMains().find(c=>c.name===name); return m?catList().filter(c=>sid(c.parentId)===sid(m.id)).sort(bySort):[]; };
+
+async function ensureCategories(){
+  if(cache.categories && cache.categories.length) return;
+  const c0=swrGet('categories.list'); if(c0 && c0.categories && c0.categories.length){ cache.categories=c0.categories; return; }
+  try{ const r=await api('categories.list'); cache.categories=r.categories; swrSet('categories.list',r); return; }catch(e){}
+  try{ const r=await api('categories.list_public'); cache.categories=r.categories; }catch(e){}
+}
+async function ensureProducts(){
+  if(cache.products) return;
+  const r=await api('products.list'); cache.products=r.products; swrSet('products.list',r);
+}
+async function reloadProducts(){
+  const r=await api('products.list'); cache.products=r.products; swrSet('products.list',r);
+  if(S.sec==='products' && $id('prodTable')){ initProdControls(); renderProducts(); }
+}
+function initProdControls(){
+  const catSel=$id('prodCat'); if(!catSel) return;
+  const keep=catSel.value;
+  const names=[]; catMains().forEach(c=>names.push(c.name));
+  (cache.products||[]).forEach(p=>{ if(p.category && names.indexOf(p.category)<0) names.push(p.category); });
+  catSel.innerHTML='<option value="">All Categories</option>'+names.map(c=>'<option value="'+esc(c)+'"'+(c===keep?' selected':'')+'>'+esc(c)+'</option>').join('');
+  $id('prodSearch').oninput=debounce(()=>{ S.page.products=1; renderProducts(); },250);
+  catSel.onchange=()=>{ S.page.products=1; renderProducts(); };
+  $id('prodStatus').onchange=()=>{ S.page.products=1; renderProducts(); };
+  const add=$id('addProdBtn'); if(add) add.onclick=()=>openProductForm(null);
+}
+window.loadProducts=async function(){
+  if(!can('products.view')){ $id('prodTable').innerHTML=emptyBox('No permission: products.view'); return; }
+  const c0=swrGet('categories.list'), p0=swrGet('products.list');
+  if(c0) cache.categories=c0.categories;
+  if(p0){ cache.products=p0.products; initProdControls(); renderProducts(); } else { initProdControls(); }
+  const jobs=[];
+  if(can('categories.view')) jobs.push(api('categories.list').then(r=>{ cache.categories=r.categories; swrSet('categories.list',r); }).catch(()=>{}));
+  jobs.push(api('products.list').then(r=>{ cache.products=r.products; swrSet('products.list',r); }));
+  await Promise.all(jobs);
+  if(S.sec!=='products' || !$id('prodTable')) return;
+  initProdControls(); renderProducts();
+};
+window.renderProducts=function(){
+  const t=$id('prodTable'); if(!t) return;
+  const list=cache.products||[];
+  productStats(list);
+  const q=($id('prodSearch').value||'').toLowerCase(), cat=$id('prodCat').value, st=$id('prodStatus').value;
+  let a=list.filter(p=>{
+    if(cat && p.category!==cat) return false;
+    if(st && (p.availability||'Available')!==st) return false;
+    return !q || JSON.stringify(p).toLowerCase().includes(q);
+  }).reverse();
+  const pg=pageArr(a,'products',8);
+  if(!a.length){ t.innerHTML=emptyBox(list.length?'No products match your search.':'No products yet. Click "Add New Product" to create one.'); $id('prodPager').innerHTML=''; return; }
+  t.innerHTML='<table><thead><tr><th>#</th><th>Image</th><th>Title</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    pg.rows.map((p,i)=>{
+      const imgs=parseImages(p.images), id=esc(sid(p.id));
+      const thumb=imgs[0]?'<img class="tthumb" src="'+esc(imgs[0])+'" loading="lazy">':'<div class="tthumb"></div>';
+      return '<tr><td class="muted">'+((pg.cur-1)*pg.per+i+1)+'</td><td>'+thumb+'</td>'+
+        '<td><div class="ttitle">'+esc(p.name)+'</div><div class="tsub">'+esc(String(p.description||'').slice(0,60))+'</div></td>'+
+        '<td>'+catPill(p.category)+(p.subcategory?'<div class="tsub">'+esc(p.subcategory)+'</div>':'')+'</td><td class="ttitle">'+(p.price?esc(p.price):'—')+'</td>'+
+        '<td>'+statusPill(p.availability||'Available')+'</td>'+
+        '<td><div class="act"><button type="button" class="ibtn v" title="Preview" data-act="prodprev" data-id="'+id+'">'+ic('eye')+'</button>'+
+        (can('products.edit')?'<button type="button" class="ibtn e" title="Edit" data-act="prodedit" data-id="'+id+'">'+ic('pen')+'</button>':'')+
+        (can('products.delete')?'<button type="button" class="ibtn d" title="Delete" data-act="proddel" data-id="'+id+'">'+ic('trash')+'</button>':'')+
+        '</div></td></tr>';
+    }).join('')+'</tbody></table>';
+  $id('prodPager').innerHTML=pagerHtml(pg,'products');
+  if(S.selProd && window.innerWidth>1100) previewProduct(S.selProd,true);
+};
+function productPreviewHtml(p){
+  const imgs=parseImages(p.images), id=esc(sid(p.id));
+  return (imgs[0]?'<img class="pv-img" src="'+esc(imgs[0])+'">':'<div class="pv-img"></div>')+
+    (imgs.length>1?'<div class="imgpreview">'+imgs.slice(1,6).map(u=>'<div class="ph"><img src="'+esc(u)+'"></div>').join('')+'</div>':'')+
+    '<div class="pv-title"><span>'+esc(p.name)+'</span>'+statusPill(p.availability||'Available')+'</div><div class="pv-meta">'+
+    '<div class="pv-row">'+ic('layers')+'<span class="k">Category</span><span class="v">'+esc(p.category||'—')+'</span></div>'+
+    (p.subcategory?'<div class="pv-row">'+ic('tag')+'<span class="k">Subcategory</span><span class="v">'+esc(p.subcategory)+'</span></div>':'')+
+    (p.material?'<div class="pv-row">'+ic('cube')+'<span class="k">Material</span><span class="v">'+esc(p.material)+'</span></div>':'')+
+    (p.size?'<div class="pv-row">'+ic('box')+'<span class="k">Size</span><span class="v">'+esc(p.size)+'</span></div>':'')+
+    '<div class="pv-row">'+ic('money')+'<span class="k">Price</span><span class="v">'+(p.price?esc(p.price):'—')+'</span></div></div>'+
+    (p.description?'<p class="muted" style="margin:10px 0 0;font-size:13px">'+esc(p.description)+'</p>':'')+
+    '<hr class="hr"><div class="qa">'+
+    (can('products.edit')?'<button type="button" class="btn btn-p" data-act="prodedit" data-id="'+id+'">'+ic('pen')+'Edit Product</button>':'')+
+    (can('products.create')?'<button type="button" class="btn btn-o" data-act="proddup" data-id="'+id+'">'+ic('cube')+'Duplicate</button>':'')+
+    (can('products.delete')?'<button type="button" class="btn btn-danger" data-act="proddel" data-id="'+id+'">'+ic('trash')+'Delete</button>':'')+'</div>';
+}
+window.previewProduct=function(id,soft){
+  const p=findBy(cache.products,id); if(!p) return;
+  S.selProd=sid(id);
+  if(window.innerWidth>1100){
+    const el=$id('prodPreview'); if(el) el.innerHTML='<div class="card cardpad"><div class="ctitle">Product Preview</div>'+productPreviewHtml(p)+'</div>';
+    return;
+  }
+  if(soft) return;
+  openInfoModal('Product Preview',productPreviewHtml(p));
+};
+window.productForm=function(p={}){
+  const img=imageUploadWidget(parseImages(p.images)); window.__pimg=img.state;
+  const mains=catMains().map(c=>c.name);
+  const cur=p.category||'';
+  const names=mains.length?mains.slice():DEFAULT_CATEGORIES.slice();
+  if(cur && names.indexOf(cur)<0) names.unshift(cur);
+  const selMain=cur||names[0]||'';
+  return `
+  <div class="row2">
+    <div style="grid-column:1/-1"><label>Product Name *</label><input id="f_name" value="${esc(p.name||'')}"></div>
+    <div style="grid-column:1/-1"><label>Short Description</label><textarea id="f_desc">${esc(p.description||'')}</textarea></div>
+    <div><label>Main Category</label><select id="f_cat">${names.map(c=>'<option value="'+esc(c)+'" '+(selMain===c?'selected':'')+'>'+esc(c)+'</option>').join('')}</select></div>
+    <div><label>Subcategory</label><select id="f_sub">${subOptionsHtml(selMain,p.subcategory||'')}</select><div class="hint" id="f_subhint">${subHint(selMain)}</div></div>
+    <div><label>Product Type</label><input id="f_type" value="${esc(p.type||'')}" placeholder="e.g. Backlit LED"></div>
+    <div><label>Material</label><input id="f_material" value="${esc(p.material||'')}" placeholder="e.g. Acrylic + LED"></div>
+    <div><label>Size / Dimensions</label><input id="f_size" value="${esc(p.size||'')}" placeholder="e.g. Custom (Any Size)"></div>
+    <div><label>Availability</label><select id="f_avail">
+      <option ${(p.availability||'Available')==='Available'?'selected':''}>Available</option>
+      <option ${p.availability==='Unavailable'?'selected':''}>Unavailable</option></select></div>
+    <div><label>Price (manual)</label><input id="f_price" value="${esc(p.price||'')}" placeholder="₹25,000 or Get a Quote"></div>
+    <div><label>Price Note</label><input id="f_pnote" value="${esc(p.priceNote||'')}" placeholder="e.g. Starting from / per sq.ft"></div>
+    <div><label>Tags (comma separated)</label><input id="f_tags" value="${esc(p.tags||'')}"></div>
+    <div><label>Featured</label><select id="f_feat"><option value="" ${!p.featured?'selected':''}>No</option><option value="1" ${p.featured?'selected':''}>Yes</option></select></div>
+  </div>
+  ${img.html}
+  <div class="msec">SEO</div>
+  <div class="row2">
+    <div><label>SEO Title</label><input id="f_seot" value="${esc(p.seoTitle||'')}"></div>
+    <div><label>SEO Keywords</label><input id="f_seok" value="${esc(p.seoKeywords||'')}"></div>
+    <div style="grid-column:1/-1"><label>SEO Description</label><textarea id="f_seod">${esc(p.seoDesc||'')}</textarea></div>
+  </div>`;
+};
+function subOptionsHtml(mainName,current){
+  const subs=subsOfName(mainName);
+  let h='<option value="">— None —</option>'+subs.map(s=>'<option value="'+esc(s.name)+'" '+(s.name===current?'selected':'')+'>'+esc(s.name)+'</option>').join('');
+  if(current && !subs.some(s=>s.name===current)) h+='<option value="'+esc(current)+'" selected>'+esc(current)+' (not in list)</option>';
+  return h;
+}
+function subHint(mainName){ return subsOfName(mainName).length?'':'No subcategories for this category yet. Add them in Categories.'; }
+function wireCategoryCascade(){
+  const m=$id('f_cat'), s=$id('f_sub'); if(!m||!s) return;
+  m.onchange=()=>{ s.innerHTML=subOptionsHtml(m.value,''); const h=$id('f_subhint'); if(h) h.textContent=subHint(m.value); };
+}
+window.openProductForm=async function(id){
+  id=(id===null||id===undefined||id===''||id==='null')?null:sid(id);
+  if(id && !can('products.edit')) return;
+  if(!id && !can('products.create')) return;
+  await ensureCategories();
+  let p=id?findBy(cache.products,id):{};
+  if(id && !p){
+    try{ const r=await api('products.list'); cache.products=r.products; swrSet('products.list',r); p=findBy(cache.products,id); }catch(e){ toast(e.message,'err'); return; }
+    if(!p){ toast('Product not found. Please refresh.','err'); return; }
+  }
+  openModal(id?'Edit Product':'Add New Product',productForm(p||{}),async()=>{
+    await withSaving(async()=>{
+      const data=readProductForm();
+      if(!data.name.trim()) throw new Error('Product name is required.');
+      if(id) await api('products.edit',{id,...data}); else await api('products.create',data);
+      closeModal(); toast(id?'Product updated':'Product created');
+      if(id) S.selProd=id;
+      await reloadProducts();
+    });
+  });
+  wireCategoryCascade();
+};
+window.duplicateProduct=async function(id){
+  const p=findBy(cache.products,id); if(!p) return;
+  closeModal();
+  try{
+    const data={...p}; delete data.id; delete data.createdAt; delete data.updatedAt; data.name=String(p.name||'')+' (Copy)';
+    await api('products.create',data); toast('Product duplicated'); await reloadProducts();
+  }catch(e){ toast(e.message,'err'); }
+};
+window.deleteProduct=async function(id){
+  closeModal();
+  if(!await confirmAction('Delete this product? This cannot be undone.')) return;
+  try{ await api('products.delete',{id}); if(sid(S.selProd)===sid(id)) S.selProd=null; toast('Product deleted'); await reloadProducts(); }
+  catch(e){ toast(e.message,'err'); }
+};
+
+/* =====================================================================
+   CATEGORIES  (main -> own subcategories; rename/move keeps products in sync)
+   ===================================================================== */
+const catPayload = c => ({id:c.id,name:c.name,description:c.description||'',parentId:c.parentId||'',sort:c.sort||0,status:c.status||'ACTIVE',image:c.image||''});
+const prodPayload = (p,ch) => Object.assign({id:p.id,name:p.name,description:p.description||'',category:p.category||'',subcategory:p.subcategory||'',type:p.type||'',material:p.material||'',size:p.size||'',availability:p.availability||'Available',price:p.price||'',priceNote:p.priceNote||'',tags:p.tags||'',featured:p.featured?'1':'',seoTitle:p.seoTitle||'',seoKeywords:p.seoKeywords||'',seoDesc:p.seoDesc||'',images:parseImages(p.images)},ch||{});
+
+window.loadCategories=async function(){
+  if(!can('categories.view')){ $id('catTable').innerHTML=emptyBox('No permission: categories.view'); return; }
+  const b=$id('addCatBtn'); if(b) b.onclick=()=>openCategoryForm(null);
+  const c0=swrGet('categories.list'), p0=swrGet('products.list');
+  if(p0) cache.products=p0.products;
+  if(c0){ cache.categories=c0.categories; renderCategories(); }
+  const jobs=[api('categories.list').then(r=>{ cache.categories=r.categories; swrSet('categories.list',r); })];
+  if(can('products.view')) jobs.push(api('products.list').then(r=>{ cache.products=r.products; swrSet('products.list',r); }).catch(()=>{}));
+  await Promise.all(jobs);
+  if(S.sec==='categories' && $id('catTable')) renderCategories();
+};
+window.renderCategories=function(){
+  const t=$id('catTable'); if(!t) return;
+  const list=(cache.categories||[]).slice().sort(bySort);
+  if(!list.length){ t.innerHTML=emptyBox('No categories yet. Add your first category.'); return; }
+  const mains=list.filter(c=>!c.parentId), subs=list.filter(c=>c.parentId);
+  const prods=cache.products||null;
+  const count=(c,isSub)=>prods?prods.filter(p=>isSub?p.subcategory===c.name:p.category===c.name).length:null;
+  const sibIdx=c=>{ const s=list.filter(x=>sid(x.parentId)===sid(c.parentId)); return {i:s.findIndex(x=>sid(x.id)===sid(c.id)),n:s.length}; };
+  const row=(c,depth)=>{
+    const kids=subs.filter(s=>sid(s.parentId)===sid(c.id)).length, id=esc(sid(c.id)), n=count(c,!!c.parentId), si=sibIdx(c);
+    return '<tr><td>'+(depth?'<span style="padding-left:22px;color:#9db0c8">└─</span> ':'')+(c.image?'<img class="tthumb" style="display:inline-block;vertical-align:middle;margin-right:8px;width:34px;height:34px" src="'+esc(c.image)+'">':'')+'<span class="ttitle">'+esc(c.name)+'</span></td>'+
+      '<td>'+(depth?'<span class="pill off">Subcategory</span>':kids?'<span class="pill info">'+kids+' sub</span>':'<span class="pill off">Main</span>')+'</td>'+
+      '<td class="muted">'+(n===null?'—':n)+'</td><td>'+statusPill(c.status)+'</td>'+
+      '<td><div class="act">'+
+      (can('categories.edit')?'<button type="button" class="ibtn e" title="Move up" data-act="catup" data-id="'+id+'"'+(si.i<=0?' disabled style="opacity:.35"':'')+'>▲</button><button type="button" class="ibtn e" title="Move down" data-act="catdown" data-id="'+id+'"'+(si.i>=si.n-1?' disabled style="opacity:.35"':'')+'>▼</button>':'')+
+      (!depth&&can('categories.create')?'<button type="button" class="ibtn v" title="Add subcategory" data-act="catsub" data-id="'+id+'" style="width:auto;padding:0 10px;font-size:12px;font-weight:600">+ Sub</button>':'')+
+      (can('categories.edit')?'<button type="button" class="ibtn e" title="Edit" data-act="catedit" data-id="'+id+'">'+ic('pen')+'</button>':'')+
+      (can('categories.delete')?'<button type="button" class="ibtn d" title="Delete" data-act="catdel" data-id="'+id+'">'+ic('trash')+'</button>':'')+
+      '</div></td></tr>';
+  };
+  t.innerHTML='<table><thead><tr><th>Category</th><th>Type</th><th>Products</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    mains.map(m=>row(m,0)+subs.filter(s=>sid(s.parentId)===sid(m.id)).map(s=>row(s,1)).join('')).join('')+
+    subs.filter(s=>!mains.some(m=>sid(m.id)===sid(s.parentId))).map(s=>row(s,0)).join('')+'</tbody></table>';
+};
+window.openCategoryForm=async function(id,presetParent){
+  id=(id===null||id===undefined||id===''||id==='null')?null:sid(id);
+  await ensureCategories();
+  const c=id?(findBy(cache.categories,id)||{}):{};
+  const hasKids=id?(cache.categories||[]).some(x=>sid(x.parentId)===id):false;
+  const mains=(cache.categories||[]).filter(x=>!x.parentId && sid(x.id)!==id);
+  const parentVal=id?sid(c.parentId||''):sid(presetParent||'');
+  const img=imageUploadWidget(c.image?[c.image]:[],'Category Image (shown on the website)');
+  window.__cimg=img.state;
+  openModal(id?'Edit Category':(presetParent?'Add Subcategory':'Add Category'),`
+    <label>Name *</label><input id="c_name" value="${esc(c.name||'')}">
+    <label>Description</label><textarea id="c_desc">${esc(c.description||'')}</textarea>
+    <div class="row2">
+      <div><label>Parent (leave empty for a main category)</label><select id="c_parent" ${hasKids?'disabled':''}><option value="">— Main Category —</option>${mains.map(m=>'<option value="'+esc(sid(m.id))+'" '+(parentVal===sid(m.id)?'selected':'')+'>'+esc(m.name)+'</option>').join('')}</select>${hasKids?'<div class="hint">This category has subcategories, so it stays a main category.</div>':''}</div>
+      <div><label>Sort Order</label><input id="c_sort" type="number" value="${esc(c.sort||0)}"></div>
+      <div><label>Status</label><select id="c_status"><option ${(c.status||'ACTIVE')==='ACTIVE'?'selected':''}>ACTIVE</option><option ${c.status==='INACTIVE'?'selected':''}>INACTIVE</option></select></div>
+    </div>
+    ${img.html}`,async()=>{
+    await withSaving(async()=>{
+      const data={name:val('c_name').trim(),description:val('c_desc'),parentId:hasKids?'':val('c_parent'),sort:val('c_sort'),status:val('c_status'),image:window.__cimg.images[0]||''};
+      if(hasKids) data.parentId='';
+      if(!data.name) throw new Error('Category name is required.');
+      const dup=(cache.categories||[]).find(x=>sid(x.id)!==sid(id) && String(x.name).trim().toLowerCase()===data.name.toLowerCase());
+      if(dup) throw new Error('A category named "'+dup.name+'" already exists. Names must be unique.');
+      if(id){
+        const old={...c};
+        await api('categories.edit',{id,...data});
+        await cascadeCategoryChange(old,data);
+      } else await api('categories.create',data);
+      closeModal(); toast(id?'Category updated':'Category created'); await loadCategories();
+    });
+  });
+};
+/* keep products pointing at the right category names after rename / move */
+async function cascadeCategoryChange(old,nw){
+  const newName=nw.name.trim(), wasSub=!!old.parentId, nowSub=!!nw.parentId;
+  const newParent=nowSub?findBy(cache.categories,nw.parentId):null;
+  if(old.name===newName && sid(old.parentId||'')===sid(nw.parentId||'')) return;
+  try{ await ensureProducts(); }catch(e){ return; }
+  const jobs=[];
+  (cache.products||[]).forEach(p=>{
+    let cat=p.category||'', sub=p.subcategory||'', hit=false;
+    if(!wasSub && !nowSub){ if(cat===old.name){ cat=newName; hit=true; } }
+    else if(wasSub && nowSub){ if(sub===old.name){ sub=newName; cat=newParent?newParent.name:cat; hit=true; } }
+    else if(wasSub && !nowSub){ if(sub===old.name){ cat=newName; sub=''; hit=true; } }
+    else if(!wasSub && nowSub){ if(cat===old.name){ cat=newParent?newParent.name:cat; sub=newName; hit=true; } }
+    if(hit && (cat!==p.category || sub!==(p.subcategory||''))) jobs.push({p,cat,sub});
+  });
+  const btn=$id('modalSave');
+  for(let i=0;i<jobs.length;i++){
+    if(btn) btn.textContent='Updating products '+(i+1)+'/'+jobs.length+'…';
+    await api('products.edit',prodPayload(jobs[i].p,{category:jobs[i].cat,subcategory:jobs[i].sub}));
+    jobs[i].p.category=jobs[i].cat; jobs[i].p.subcategory=jobs[i].sub;
+  }
+  if(jobs.length){ swrSet('products.list',{ok:true,products:cache.products}); toast(jobs.length+' product(s) updated to the new category'); }
+}
+window.deleteCategory=async function(id){
+  await ensureCategories(); try{ await ensureProducts(); }catch(e){}
+  const c=findBy(cache.categories,id); if(!c) return;
+  const kids=(cache.categories||[]).filter(x=>sid(x.parentId)===sid(id));
+  const names=[c.name].concat(kids.map(k=>k.name));
+  const used=(cache.products||[]).filter(p=>names.indexOf(p.category)>-1||names.indexOf(p.subcategory)>-1).length;
+  const msg='Delete "'+c.name+'"'+(kids.length?' and its '+kids.length+' subcategor'+(kids.length>1?'ies':'y'):'')+'?'+(used?' '+used+' product(s) use it; they stay in Products but will no longer appear under this category on the website.':'');
+  if(!await confirmAction(msg)) return;
+  try{ const r=await api('categories.delete',{id}); toast('Deleted '+(r.removed||1)+' item(s)'); await loadCategories(); }
+  catch(e){ toast(e.message,'err'); }
+};
+async function moveCat(id,dir){
+  const list=cache.categories||[], c=findBy(list,id); if(!c) return;
+  const sibs=list.filter(x=>sid(x.parentId)===sid(c.parentId)).sort(bySort);
+  const i=sibs.findIndex(x=>sid(x.id)===sid(id)), j=i+dir; if(j<0||j>=sibs.length) return;
+  const order=sibs.slice(); const tmp=order[i]; order[i]=order[j]; order[j]=tmp;
+  const ups=[]; order.forEach((x,k)=>{ const ns=(k+1)*10; if(Number(x.sort)!==ns) ups.push({x,ns}); });
+  ups.forEach(u=>{ u.x.sort=u.ns; }); renderCategories();
+  try{ for(const u of ups) await api('categories.edit',catPayload(u.x)); swrSet('categories.list',{ok:true,categories:cache.categories}); toast('Order updated'); }
+  catch(e){ toast(e.message,'err'); await loadCategories(); }
+}
+
+/* =====================================================================
+   ONE click handler for every action button (survives re-renders)
+   ===================================================================== */
+document.addEventListener('click',function(e){
+  const b=e.target.closest && e.target.closest('[data-act]'); if(!b || b.disabled) return;
+  const act=b.getAttribute('data-act'), id=b.getAttribute('data-id');
+  const inModal=!!b.closest('#modal');
+  if(act==='vieworder'){ e.preventDefault(); viewOrder(id); }
+  else if(act==='prodprev'){ previewProduct(id); }
+  else if(act==='prodedit'){ if(inModal) closeModal(); openProductForm(id); }
+  else if(act==='proddel'){ deleteProduct(id); }
+  else if(act==='proddup'){ duplicateProduct(id); }
+  else if(act==='catedit'){ openCategoryForm(id); }
+  else if(act==='catsub'){ openCategoryForm(null,id); }
+  else if(act==='catdel'){ deleteCategory(id); }
+  else if(act==='catup'){ moveCat(id,-1); }
+  else if(act==='catdown'){ moveCat(id,1); }
+});
+
+/* =====================================================================
+   IMAGE VIEWER: opens small, zoom by pinch / double-tap / +/-, Back button
+   ===================================================================== */
+window.showImage=function(url){
+  if(!url) return;
+  url=String(url);
+  const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const small=m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w900':url;
+  const big=m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w2400':url;
+  const ov=document.createElement('div'); ov.className='imgv';
+  ov.innerHTML='<div class="imgv-bar"><button type="button" class="imgv-back">‹ Back</button><div class="imgv-title">Customer image</div><div class="imgv-tools"><button type="button" data-z="out" aria-label="Zoom out">−</button><span class="imgv-pct">100%</span><button type="button" data-z="in" aria-label="Zoom in">+</button></div></div>'+
+    '<div class="imgv-stage"><img class="imgv-img" alt="" draggable="false"></div>'+
+    '<div class="imgv-foot"><span>Pinch, double-tap or use + / − to zoom</span><a href="'+esc(big)+'" target="_blank" rel="noopener">Open original</a></div>';
+  document.body.appendChild(ov); document.body.style.overflow='hidden';
+  const img=ov.querySelector('.imgv-img'), stage=ov.querySelector('.imgv-stage'), pct=ov.querySelector('.imgv-pct');
+  img.src=small;
+  let sc=1,tx=0,ty=0,bigLoaded=false,pushed=false;
+  function apply(){ img.style.transform='translate('+tx+'px,'+ty+'px) scale('+sc+')'; pct.textContent=Math.round(sc*100)+'%'; img.classList.toggle('zoomed',sc>1.02); }
+  function clampPan(){
+    if(sc<=1){ tx=0; ty=0; return; }
+    const mx=Math.max(0,(img.offsetWidth*sc-stage.clientWidth)/2+40), my=Math.max(0,(img.offsetHeight*sc-stage.clientHeight)/2+40);
+    tx=Math.max(-mx,Math.min(mx,tx)); ty=Math.max(-my,Math.min(my,ty));
+  }
+  function loadBig(){ if(bigLoaded||big===small) return; bigLoaded=true; const t=new Image(); t.onload=()=>{ img.src=big; }; t.src=big; }
+  function setScale(ns,cx,cy){
+    ns=Math.max(1,Math.min(6,ns)); const k=ns/sc; tx=cx-(cx-tx)*k; ty=cy-(cy-ty)*k; sc=ns; clampPan(); apply(); if(sc>1.3) loadBig();
+  }
+  const ptrs=new Map(); let lastDist=0,lastTap=0,moved=false;
+  const dist=()=>{ const a=Array.from(ptrs.values()); return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y); };
+  const rel=(x,y)=>{ const r=stage.getBoundingClientRect(); return {x:x-r.left-r.width/2,y:y-r.top-r.height/2}; };
+  stage.addEventListener('pointerdown',e=>{ try{ stage.setPointerCapture(e.pointerId); }catch(_){} ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(ptrs.size===2) lastDist=dist(); moved=false; });
+  stage.addEventListener('pointermove',e=>{
+    const p=ptrs.get(e.pointerId); if(!p) return;
+    const dx=e.clientX-p.x, dy=e.clientY-p.y; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size===2){
+      const d=dist(), a=Array.from(ptrs.values()), c=rel((a[0].x+a[1].x)/2,(a[0].y+a[1].y)/2);
+      if(lastDist) setScale(sc*d/lastDist,c.x,c.y); lastDist=d; moved=true;
+    }else if(ptrs.size===1 && sc>1){ tx+=dx; ty+=dy; clampPan(); apply(); if(Math.abs(dx)+Math.abs(dy)>2) moved=true; }
+  });
+  function endPtr(e){ if(!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if(ptrs.size<2) lastDist=0; }
+  stage.addEventListener('pointerup',e=>{
+    const single=ptrs.size===1; endPtr(e);
+    if(single && !moved){
+      const now=Date.now();
+      if(now-lastTap<320){ const c=rel(e.clientX,e.clientY); if(sc>1.05){ sc=1; tx=0; ty=0; apply(); } else setScale(2.5,c.x,c.y); lastTap=0; }
+      else lastTap=now;
+    }
+  });
+  stage.addEventListener('pointercancel',endPtr);
+  stage.addEventListener('wheel',e=>{ e.preventDefault(); const c=rel(e.clientX,e.clientY); setScale(sc*(e.deltaY<0?1.18:1/1.18),c.x,c.y); },{passive:false});
+  ov.querySelector('[data-z="in"]').onclick=()=>setScale(sc*1.4,0,0);
+  ov.querySelector('[data-z="out"]').onclick=()=>setScale(sc/1.4,0,0);
+  function close(fromPop){
+    document.removeEventListener('keydown',onKey); window.removeEventListener('popstate',onPop);
+    ov.remove(); document.body.style.overflow=$id('modal').classList.contains('on')?'hidden':'';
+    if(!fromPop && pushed){ pushed=false; try{ history.back(); }catch(_){} }
+  }
+  function onPop(){ pushed=false; close(true); }
+  function onKey(e){ if(e.key==='Escape') close(false); }
+  ov.querySelector('.imgv-back').onclick=()=>close(false);
+  document.addEventListener('keydown',onKey); window.addEventListener('popstate',onPop);
+  try{ history.pushState({imgv:1},''); pushed=true; }catch(_){}
+  apply();
+};
+})();
+</script>
+
+</body>
+</html>
